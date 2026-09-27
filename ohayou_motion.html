@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>おはようございます｜bloom studio</title>
+<title>おはようございます｜Hwam</title>
 <style>
   :root{ --navy:#1B2A4A; --gold:#B99A5B; --sun1:#FFE27A; --sun2:#FF9A3C; --pink:#FF5E8A; --sky1:#2B1B5A; --sky2:#FF7A59; }
   *{ box-sizing:border-box; margin:0; padding:0; }
@@ -57,15 +57,15 @@
     opacity:0; transform:scale(0) rotate(-8deg); animation:popIn .6s 3.4s cubic-bezier(.2,1.8,.4,1) forwards; }
   .sub b{ color:var(--sun1); }
 
-  .brand{ position:absolute; left:0; right:0; bottom:4vh; text-align:center; color:#fff; font-family:"Times New Roman",serif;
-    letter-spacing:.3em; font-size:min(3.4vw,15px); opacity:0; animation:fadeUp .8s 4s ease-out forwards; text-shadow:0 2px 8px rgba(27,42,74,.6); }
-  .brand small{ display:block; color:var(--navy); letter-spacing:.2em; font-size:.75em; margin-top:4px; text-shadow:none; }
+  .brand{ position:absolute; left:0; right:0; bottom:4vh; text-align:center; color:var(--navy); font-family:"Times New Roman",serif; font-weight:bold;
+    letter-spacing:.3em; padding-left:.3em; font-size:min(7vw,32px); opacity:0; animation:fadeUp .8s 4s ease-out forwards; text-shadow:0 0 14px rgba(255,255,255,.95), 0 0 4px rgba(255,255,255,.9); }
+  .brand small{ display:block; color:#7A5E28; letter-spacing:.24em; font-size:.42em; font-weight:normal; margin-top:2px; }
 
   .replay{ position:absolute; right:16px; top:16px; background:rgba(27,42,74,.75); color:#fff; border:1px solid var(--gold);
     border-radius:999px; padding:8px 16px; font-size:12px; letter-spacing:.1em; cursor:pointer; opacity:0; animation:fadeUp .6s 4.5s forwards; }
 
   /* 動画書き出し時：リールの下部UI（キャプション欄）に隠れない位置へ */
-  .capture .brand{ bottom:22vh; font-size:min(4.4vw,20px); }
+  .capture .brand{ bottom:21vh; font-size:min(8vw,40px); }
   @media (orientation: landscape){ .capture .brand{ bottom:5vh; } }
 
   @keyframes dawn{ to{ opacity:1; } }
@@ -105,7 +105,7 @@
     <div class="sub">今日も<b>いい一日</b>を！</div>
   </div>
 
-  <div class="brand">bloom studio<small>GOOD MORNING</small></div>
+  <div class="brand">Hwam<small>GOOD MORNING</small></div>
   <button class="replay" id="replay" type="button">もう一回 ↻</button>
 </div>
 
