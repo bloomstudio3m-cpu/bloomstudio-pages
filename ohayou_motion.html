@@ -64,6 +64,9 @@
   .replay{ position:absolute; right:16px; top:16px; background:rgba(27,42,74,.75); color:#fff; border:1px solid var(--gold);
     border-radius:999px; padding:8px 16px; font-size:12px; letter-spacing:.1em; cursor:pointer; opacity:0; animation:fadeUp .6s 4.5s forwards; }
 
+  /* 動画書き出し時：リールの下部UI（キャプション欄）に隠れない位置へ */
+  .capture .brand{ bottom:22vh; font-size:min(4.4vw,20px); }
+
   @keyframes dawn{ to{ opacity:1; } }
   @keyframes sunrise{ to{ transform:translateY(0) scale(1); } }
   @keyframes pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
@@ -175,28 +178,31 @@
     ctx.closePath(); ctx.shadowColor = "#FFE27A"; ctx.shadowBlur = 12; ctx.fill(); ctx.restore();
   }
 
-  function loop(now){
-    const t = (now - t0) / 1000;
+  // 1ティック＝1/60秒ぶんのシミュレーション
+  function tick(t){
     events = events.filter(e => { if(t >= e.t){ e.fn(); return false; } return true; });
     if(t > 2 && Math.random() < .25) twinkle();
     if(t > 5 && Math.random() < .02) burst(rnd(W*.1,W*.9), rnd(H*.1,H*.5), 40, 7);
-
-    ctx.clearRect(0,0,W,H);
-    ctx.globalCompositeOperation = "lighter";
     parts = parts.filter(p => p.age < p.life && p.y < H + 40);
     for(const p of parts){
       p.age++;
+      if(p.kind === "spark"){ p.vx *= .96; p.vy = p.vy * .96 + .12; p.x += p.vx; p.y += p.vy; }
+      else if(p.kind === "conf"){ p.x += p.vx + Math.sin((p.age + p.sway*20) / 15) * 1.2; p.y += p.vy; p.rot += p.vr; }
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation = "lighter";
+    for(const p of parts){
+      if(p.kind !== "spark") continue;
       const k = 1 - p.age / p.life;
-      if(p.kind === "spark"){
-        p.vx *= .96; p.vy = p.vy * .96 + .12; p.x += p.vx; p.y += p.vy;
-        ctx.globalAlpha = k; ctx.fillStyle = p.c;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.6 + k), 0, Math.PI*2); ctx.fill();
-      }
+      ctx.globalAlpha = k; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.6 + k), 0, Math.PI*2); ctx.fill();
     }
     ctx.globalCompositeOperation = "source-over";
     for(const p of parts){
       if(p.kind === "conf"){
-        p.x += p.vx + Math.sin((p.age + p.sway*20) / 15) * 1.2; p.y += p.vy; p.rot += p.vr;
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.age / 6));
         ctx.globalAlpha = 1; ctx.fillStyle = p.c; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
       } else if(p.kind === "star"){
@@ -204,9 +210,26 @@
       }
     }
     ctx.globalAlpha = 1;
-    requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+
+  // ?capture のときは自動再生せず、動画書き出し用に時間を外から進める
+  const capture = new URLSearchParams(location.search).has("capture");
+  if(capture){
+    document.getElementById("replay").style.display = "none";
+    document.body.classList.add("capture");
+    let ticks = 0;
+    window.renderAt = function(sec){
+      document.getAnimations().forEach(a => { a.pause(); a.currentTime = sec * 1000; });
+      while(ticks < Math.round(sec * 60)){ tick(ticks / 60); ticks++; }
+      draw();
+    };
+  } else {
+    (function loop(now){
+      tick((now - t0) / 1000);
+      draw();
+      requestAnimationFrame(loop);
+    })(t0);
+  }
 
   // もう一回
   document.getElementById("replay").addEventListener("click", () => location.reload());
