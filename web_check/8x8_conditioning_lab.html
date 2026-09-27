@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>無料Web診断｜エイトバイエイト 様</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:wght@500;600&display=swap">
+<style>
+  :root{ --navy:#1B2A4A; --gold:#B99A5B; --ink:#2E3440; --sub:#6B7280; --line:#E3DDD2; --bg:#FAF7F1; --soft:#F3EEE4; --white:#FFFEFB; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#E9E5DD; color:var(--ink); font-family:"Zen Kaku Gothic New",sans-serif; }
+  .card{ width:1080px; height:2720px; margin:0 auto 40px; background:var(--bg); padding:112px 96px 88px; position:relative; display:flex; flex-direction:column; }
+  .en{ font-family:"Cormorant Garamond",serif; color:var(--gold); letter-spacing:.32em; font-size:30px; font-weight:600; }
+  .mincho{ font-family:"Shippori Mincho",serif; }
+  .page{ position:absolute; top:64px; right:96px; font-family:"Cormorant Garamond",serif; color:var(--sub); letter-spacing:.2em; font-size:26px; }
+  .rule{ width:72px; height:2px; background:var(--gold); }
+  h1{ font-family:"Shippori Mincho",serif; color:var(--navy); font-weight:700; }
+  h2{ font-family:"Shippori Mincho",serif; color:var(--navy); font-weight:700; font-size:46px; letter-spacing:.06em; display:flex; align-items:center; gap:20px; }
+  h2::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .note{ font-size:26px; color:var(--sub); line-height:1.8; }
+
+  /* 1枚目 */
+  .c1{ text-align:center; align-items:center; justify-content:center; }
+  .c1 h1{ font-size:108px; letter-spacing:.1em; margin:40px 0 0; padding-left:.1em; }
+  .c1 .rule{ margin:72px auto; }
+  .c1 .shop{ font-family:"Shippori Mincho",serif; color:var(--navy); font-size:64px; font-weight:700; letter-spacing:.08em; }
+  .c1 .shop small{ font-size:40px; margin-left:8px; }
+  .c1 .shop-en{ font-family:"Cormorant Garamond",serif; font-size:32px; color:var(--sub); letter-spacing:.14em; margin-top:18px; }
+  .c1 .lead{ font-size:40px; line-height:2; color:var(--ink); margin-top:88px; }
+  .flow{ margin-top:120px; width:100%; }
+  .flow-t{ font-size:30px; color:var(--sub); letter-spacing:.1em; margin-bottom:40px; }
+  .steps{ display:flex; justify-content:space-between; position:relative; }
+  .steps::before{ content:""; position:absolute; top:40px; left:90px; right:90px; height:1px; background:var(--gold); }
+  .step{ width:200px; position:relative; }
+  .step .dot{ width:80px; height:80px; border-radius:50%; background:var(--white); border:1.5px solid var(--gold); margin:0 auto; display:flex; align-items:center; justify-content:center; font-family:"Cormorant Garamond",serif; font-size:34px; color:var(--gold); font-weight:600; }
+  .step b{ display:block; font-size:34px; color:var(--navy); margin-top:22px; font-weight:700; }
+  .step span{ display:block; font-size:25px; color:var(--sub); margin-top:6px; }
+  .scope{ margin-top:120px; width:100%; background:var(--white); border:1px solid var(--line); border-radius:12px; padding:44px 52px; text-align:left; }
+  .scope dt{ font-size:28px; color:var(--gold); letter-spacing:.12em; font-weight:700; }
+  .scope dd{ font-size:30px; line-height:1.9; margin-top:12px; color:var(--ink); }
+  .c1 .date{ margin-top:48px; font-family:"Cormorant Garamond",serif; color:var(--sub); font-size:30px; letter-spacing:.2em; }
+
+  /* 2枚目 */
+  .head{ margin-bottom:48px; }
+  .head h1{ font-size:72px; letter-spacing:.08em; margin-top:16px; }
+  .good{ list-style:none; margin:16px 0 52px; }
+  .good li{ padding:20px 0 20px 52px; border-bottom:1px dotted var(--line); position:relative; }
+  .good li::before{ content:""; position:absolute; left:8px; top:33px; width:22px; height:22px; border-radius:50%; border:3px solid var(--gold); }
+  .good b{ display:block; font-size:34px; color:var(--navy); font-weight:700; line-height:1.5; }
+  .good span{ display:block; font-size:29px; color:var(--sub); line-height:1.6; margin-top:4px; }
+  .issue{ background:var(--white); border:1px solid var(--line); border-radius:12px; padding:28px 40px 30px; margin-top:22px; }
+  .issue .top{ display:flex; align-items:center; gap:18px; }
+  .no{ font-family:"Cormorant Garamond",serif; font-size:46px; color:var(--gold); font-weight:600; line-height:1; }
+  .tag{ font-size:24px; color:var(--navy); border:1.5px solid var(--navy); border-radius:30px; padding:4px 18px; letter-spacing:.06em; font-weight:500; }
+  .issue h3{ font-size:35px; color:var(--navy); font-weight:700; line-height:1.4; }
+  .issue p{ font-size:29px; line-height:1.65; margin-top:14px; }
+  .issue p.why{ color:var(--sub); margin-top:8px; padding-left:44px; position:relative; }
+  .issue p.why::before{ content:"→"; position:absolute; left:0; color:var(--gold); }
+  .memo{ margin-top:36px; }
+  .memo .row{ display:flex; gap:24px; padding:20px 0; border-bottom:1px dotted var(--line); }
+  .memo .k{ flex:0 0 100px; font-size:28px; color:var(--gold); font-weight:700; letter-spacing:.08em; padding-top:2px; }
+  .memo .v{ font-size:30px; line-height:1.6; color:var(--navy); font-weight:500; }
+  .memo .v span{ display:block; color:var(--sub); font-size:28px; margin-top:4px; font-weight:400; }
+  .c2 .note, .c3 .note{ margin-top:auto; padding-top:36px; }
+
+  /* 3枚目 */
+  .lv{ margin-top:64px; }
+  .lv-h{ display:flex; align-items:baseline; gap:20px; padding-bottom:18px; border-bottom:2px solid var(--navy); }
+  .lv-h .n{ font-family:"Shippori Mincho",serif; font-size:56px; color:var(--gold); font-weight:700; line-height:1; }
+  .lv-h b{ font-family:"Shippori Mincho",serif; font-size:44px; color:var(--navy); font-weight:700; letter-spacing:.06em; }
+  .lv-h .sub{ font-size:26px; color:var(--sub); margin-left:auto; }
+  .lv ul{ list-style:none; }
+  .lv li{ padding:20px 0 18px; border-bottom:1px dotted var(--line); }
+  .lv li b{ display:block; font-size:34px; color:var(--ink); font-weight:700; line-height:1.55; }
+  .lv li span{ display:block; font-size:30px; color:var(--sub); line-height:1.65; margin-top:6px; padding-left:44px; position:relative; }
+  .lv li span::before{ content:"→"; position:absolute; left:0; color:var(--gold); }
+  .closing{ text-align:center; font-size:32px; color:var(--navy); line-height:1.9; margin-top:96px; font-family:"Shippori Mincho",serif; }
+  .brand{ text-align:center; margin-top:auto; }
+  .brand .b{ font-family:"Cormorant Garamond",serif; font-size:40px; color:var(--navy); letter-spacing:.24em; font-weight:600; }
+  .brand .a{ font-size:24px; color:var(--sub); letter-spacing:.16em; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1枚目 ===== -->
+<section class="card c1" id="card1">
+  <div class="page">01 / 03</div>
+  <div class="en">WEB SITE CHECK</div>
+  <h1>無料Web診断</h1>
+  <div class="rule"></div>
+  <div class="shop">エイトバイエイト<small>様</small></div>
+  <div class="shop-en">8×8 Conditioning.Lab</div>
+  <p class="lead">現在のWebサイトを拝見して、<br>改善できそうなポイントをまとめました。</p>
+
+  <div class="flow">
+    <p class="flow-t">お客様がご予約に至るまでの流れに沿って拝見しています</p>
+    <div class="steps">
+      <div class="step"><div class="dot">1</div><b>見つける</b><span>検索・SNS・地図</span></div>
+      <div class="step"><div class="dot">2</div><b>読む</b><span>公式サイト</span></div>
+      <div class="step"><div class="dot">3</div><b>比べる</b><span>他店と比較</span></div>
+      <div class="step"><div class="dot">4</div><b>予約する</b><span>LINE・来店</span></div>
+    </div>
+  </div>
+
+  <dl class="scope">
+    <dt>今回拝見したもの</dt>
+    <dd>公式サイト（体が硬い・運動不足の方向けページ ほか）／Google検索での表示／外部の掲載サイト・Instagram／公式LINEへの導線</dd>
+  </dl>
+  <p class="date">2026.09.27</p>
+</section>
+
+<!-- ===== 2枚目 ===== -->
+<section class="card c2" id="card2">
+  <div class="page">02 / 03</div>
+  <div class="head">
+    <div class="en">DIAGNOSIS</div>
+    <h1>現在のサイト診断</h1>
+  </div>
+
+  <h2>良いところ</h2>
+  <ul class="good">
+    <li><b>検索結果に地域名とサービス名が入っている</b><span>「東日本橋・馬喰町」「マシンピラティス」で探す方に見つけてもらいやすい形です</span></li>
+    <li><b>「体が硬い・運動不足の方」専用のページがある</b><span>運動に不安がある方の入口がすでにあります</span></li>
+    <li><b>7:00〜23:00・無休／駅徒歩3分／お客様の声</b><span>比較するときの判断材料が揃っています</span></li>
+  </ul>
+
+  <h2>改善優先度が高いところ</h2>
+  <div class="issue">
+    <div class="top"><span class="no">01</span><span class="tag">導線</span><h3>初回の入口が複数ある</h3></div>
+    <p>サイト内に「無料カウンセリング」と「体験 500円」、外部予約サイトには別の初回メニュー</p>
+    <p class="why">比べている段階の方は、選択肢が多いと迷って手が止まりやすくなります</p>
+  </div>
+  <div class="issue">
+    <div class="top"><span class="no">02</span><span class="tag">情報の鮮度</span><h3>期限を過ぎた表記が検索に出ている</h3></div>
+    <p>Google検索の説明文に「2026年4月30日まで」のキャンペーン表記（9月27日時点）</p>
+    <p class="why">「今も受けられるのかな？」と、予約前に不安が残りやすくなります</p>
+  </div>
+  <div class="issue">
+    <div class="top"><span class="no">03</span><span class="tag">スマホ</span><h3>LINE予約が文章での手順案内</h3></div>
+    <p>ページ内で「登録→友だち追加→トーク」と手順を説明</p>
+    <p class="why">スマホではボタン1つで進める方が、途中で止まりにくくなります</p>
+  </div>
+
+  <div class="memo">
+    <div class="row"><div class="k">SEO</div><div class="v">ページのURLが「/2136-2/」、タイトルに地域名がない<span>「馬喰町 初心者 ジム」などで探す方に届きにくくなります</span></div></div>
+    <div class="row"><div class="k">MEO</div><div class="v">店名の表記が掲載先ごとに異なる<span>「エイトバイエイト」「8×8 Conditioning.Lab」など。そろえると地図検索での評価がまとまりやすくなります</span></div></div>
+    <div class="row"><div class="k">SNS</div><div class="v">Instagramは「40代から」、サイトは「体が硬い・運動不足の方」<span>伝える相手がそろうと、SNSから来た方も迷わず読み進められます</span></div></div>
+  </div>
+
+  <p class="note">※2026年9月27日時点で、Google検索結果・公開ページ・外部掲載情報から確認できた内容です。表示速度などの実測値は含んでいません。</p>
+</section>
+
+<!-- ===== 3枚目 ===== -->
+<section class="card c3" id="card3">
+  <div class="page">03 / 03</div>
+  <div class="head">
+    <div class="en">NEXT STEP</div>
+    <h1>改善するとできること</h1>
+  </div>
+
+  <div class="lv" style="margin-top:0">
+    <div class="lv-h"><span class="n">①</span><b>すぐ改善</b><span class="sub">今のサイトのままでできること</span></div>
+    <ul>
+      <li><b>キャンペーンの期限・内容を最新に更新</b><span>検索結果の時点で「今受けられる」と伝わる</span></li>
+      <li><b>店名の表記をひとつにそろえる</b><span>サイト・Googleマップ・掲載サイトの情報がひとつにつながる</span></li>
+      <li><b>このページのタイトルに地域名を入れる</b><span>近くで「運動をはじめたい」と探している方に届きやすくなる</span></li>
+    </ul>
+  </div>
+
+  <div class="lv">
+    <div class="lv-h"><span class="n">②</span><b>リニューアル時に改善</b></div>
+    <ul>
+      <li><b>「はじめての方」の入口をひとつに整理</b><span>迷わず最初の一歩を選べる</span></li>
+      <li><b>スマホで常に見えるLINE予約ボタン</b><span>読みながら、そのまま予約に進める</span></li>
+      <li><b>内容が伝わるURLと、表示速度の計測・改善</b><span>検索でも共有でも内容が伝わり、読み込み待ちも減らせる</span></li>
+    </ul>
+  </div>
+
+  <div class="lv">
+    <div class="lv-h"><span class="n">③</span><b>今後強化</b></div>
+    <ul>
+      <li><b>Instagramとサイトで「誰のためのジムか」をそろえる</b><span>SNS → サイト → 予約の流れがひとつにつながる</span></li>
+      <li><b>お客様の声を悩み別に整理</b><span>体の硬さ・運動不足・姿勢など、同じ悩みの声が見つかる</span></li>
+      <li><b>接骨院の知見という強みを、比較の場面で伝わる形に</b><span>他のジムとの違いが、はじめての方にも分かりやすくなる</span></li>
+    </ul>
+  </div>
+
+  <p class="closing">少しでもご参考になればうれしいです。</p>
+  <div class="brand">
+    <div class="b">Bloom Studio</div>
+    <div class="a">静岡・東京対応</div>
+  </div>
+</section>
+
+</body>
+</html>
