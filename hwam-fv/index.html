@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HWAM｜副業、何から始める？</title>
+<meta name="description" content="できることから、副業を探す。HWAMは副業の「何から？」を一緒に整理します。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Shippori+Mincho+B1:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=block" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3EFE8; --ink:#2A2723; --ink2:#4A453F; --mute:#9A9388; --hair:#D6CEC2; --clay:#B06A4F;
+    --serif:"Cormorant Garamond",serif; --mincho:"Shippori Mincho B1",serif; --gothic:"Zen Kaku Gothic New",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+
+  /* ---- site header (placeholder: swap in the real site header) ---- */
+  .site-header{position:absolute;inset:0 0 auto 0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(16px,2.2vw,40px) clamp(16px,5.2vw,100px)}
+  .logo{font-family:var(--serif);font-weight:600;font-size:clamp(18px,1.6vw,26px);letter-spacing:.32em;text-decoration:none}
+  .header-cta{font-size:13px;letter-spacing:.14em;text-decoration:none;padding:10px 18px;border:1px solid var(--ink);transition:background .4s,color .4s}
+  .header-cta:hover{background:var(--ink);color:var(--paper)}
+
+  /* ---- FV ---- */
+  .fv{position:relative;width:100%;aspect-ratio:16/9;max-height:100vh;margin:0 auto;overflow:hidden;container-type:inline-size;background:var(--paper)}
+  @media (min-aspect-ratio:16/9){ .fv{width:calc(100vh*16/9)} }
+  .fv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* CTA: real link, positioned on the 1920x1080 grid of the canvas */
+  .fv-cta{position:absolute;left:10.4167%;top:59.259%;width:19.792%;height:7.778%;
+    display:flex;align-items:center;justify-content:space-between;padding:0 1.875cqw 0 1.875cqw;
+    background:var(--ink);color:var(--paper);text-decoration:none;
+    font-family:var(--gothic);font-weight:500;font-size:1.25cqw;letter-spacing:.26em;
+    clip-path:inset(0 calc((1 - var(--p,1)) * 100%) 0 0);opacity:var(--o,1);
+    visibility:var(--vis,visible);transition:background .5s cubic-bezier(.2,.7,.2,1)}
+  .fv-cta span{display:inline-block;transform:translateY(calc((1 - var(--q,1)) * 120%));opacity:var(--q,1)}
+  .fv-cta i{display:block;position:relative;width:2.2cqw;height:1px;background:currentColor;transform:translateX(var(--nudge,0));transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+  .fv-cta i::after{content:"";position:absolute;right:1px;top:50%;width:.55cqw;height:.55cqw;border-top:1px solid currentColor;border-right:1px solid currentColor;transform:translateY(-50%) rotate(45deg)}
+  .fv-cta:hover{background:var(--clay)}
+  .fv-cta:hover i{transform:translateX(.5cqw)}
+  .fv-cta:focus-visible{outline:2px solid var(--clay);outline-offset:4px}
+
+  .sound{position:absolute;right:5.2cqw;bottom:4.2cqw;z-index:4;display:flex;align-items:center;gap:10px;
+    background:none;border:0;color:var(--ink2);font:500 11px/1 var(--gothic);letter-spacing:.24em;cursor:pointer;padding:8px 0}
+  .sound .eq{display:flex;gap:2px;align-items:flex-end;height:12px}
+  .sound .eq b{width:2px;height:3px;background:currentColor;transition:height .3s}
+  .sound.on .eq b{animation:eq 1.25s ease-in-out infinite}
+  .sound.on .eq b:nth-child(2){animation-delay:-.4s}.sound.on .eq b:nth-child(3){animation-delay:-.8s}
+  @keyframes eq{0%,100%{height:3px}50%{height:12px}}
+
+  .next{max-width:960px;margin:0 auto;padding:120px 24px;font-family:var(--mincho);line-height:2;color:var(--ink2)}
+
+  body.render .site-header, body.render .sound, body.render .fv-cta, body.render .next{display:none}
+  body.render .fv{width:1920px;height:1080px;max-height:none}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="/">HWAM</a>
+  <a class="header-cta" href="#diagnosis">無料で副業診断</a>
+</header>
+
+<section class="fv" aria-labelledby="fv-title">
+  <canvas id="c" aria-hidden="true"></canvas>
+  <h1 id="fv-title" class="sr-only">副業、何から始める？ できることから、副業を探す。AIを使えば、できることはもう少し増やせる。HWAM 副業の「何から？」を一緒に整理する。</h1>
+  <a class="fv-cta" id="cta" href="#diagnosis"><span>無料で副業診断</span><i aria-hidden="true"></i></a>
+  <button class="sound" id="sound" type="button" aria-pressed="false"><span class="eq"><b></b><b></b><b></b></span><span class="lbl">SOUND OFF</span></button>
+</section>
+
+<section class="next" id="diagnosis">
+  <p>（ここから下は既存サイトのコンテンツ。ダミーです）</p>
+</section>
+
+<script>
+/* =====================================================================
+   HWAM — First View motion (15s seamless loop, 96 BPM grid = 0.625s)
+   Every frame is a pure function of t. Canvas is drawn on a 1920x1080
+   design grid and scaled to the element (retina aware).
+   ===================================================================== */
+const W = 1920, H = 1080, DUR = 15;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const RENDER = new URLSearchParams(location.search).has('render');
+if (RENDER) document.body.classList.add('render');
+
+const C = {
+  paper: '#F3EFE8', ink: '#2A2723', ink2: '#4A453F', mute: '#9A9388',
+  hair: '#D6CEC2', hair2: '#E2DBD0', clay: '#B06A4F', card: 'rgba(249,247,243,.92)',
+};
+const MIN = '"Shippori Mincho B1"', GOT = '"Zen Kaku Gothic New"', SER = '"Cormorant Garamond"';
+
+/* ---------- math ---------- */
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const PI = Math.PI, TAU = PI * 2;
+const _arc = CanvasRenderingContext2D.prototype.arc;
+CanvasRenderingContext2D.prototype.arc = function (x, y, r, a0, a1, ccw) { return _arc.call(this, x, y, Math.max(0, r), a0, a1, ccw); };
+const E = {
+  outQuint: x => 1 - Math.pow(1 - x, 5),
+  outQuart: x => 1 - Math.pow(1 - x, 4),
+  outCubic: x => 1 - Math.pow(1 - x, 3),
+  inCubic: x => x * x * x,
+  inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  inOutQuart: x => x < .5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2,
+  inOutSine: x => -(Math.cos(PI * x) - 1) / 2,
+  outBack: (x, s = 1.2) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2),
+};
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ---------- timeline (seconds, on the 0.625s beat grid) ---------- */
+const T = {
+  qIn: .35, qHold: 1.6, qRecede: 2.5, qGone: 5.0,
+  lineStart: 5.0, station0: 5.3125, stationGap: .3125,
+  copy1In: 7.5, copy1Out: 9.1, copy2In: 9.4, branch0: 9.6875, copy2Out: 10.95,
+  finalMove: 11.05, logo: 11.3, cta: 12.1, outro: 14.35,
+};
+const stationT = i => T.station0 + i * T.stationGap;
+
+/* ---------- camera / parallax ---------- */
+const MOUSE = { x: 0, y: 0, tx: 0, ty: 0 };
+let CAM = { x: 0, y: 0 };
+function camera(t) {
+  const ph = TAU * t / DUR; // periodic over the loop -> seamless
+  return { x: Math.sin(ph) * 12 + MOUSE.x * 18, y: Math.sin(ph * 2) * 6 + MOUSE.y * 12 };
+}
+function L(d, fn) { ctx.save(); ctx.translate(-CAM.x * d, -CAM.y * d); fn(); ctx.restore(); }
+
+/* ---------- text helpers ---------- */
+function setFont(w, s, f) { ctx.font = `${w} ${s}px ${f}`; }
+function text(s, x, y, { w = 400, size = 16, f = GOT, col = C.ink, align = 'left', track = 0, alpha = 1, base = 'alphabetic' } = {}) {
+  if (alpha <= 0) return;
+  ctx.save(); setFont(w, size, f); ctx.fillStyle = col; ctx.textAlign = align; ctx.textBaseline = base;
+  ctx.letterSpacing = track + 'px'; ctx.globalAlpha *= alpha; ctx.fillText(s, x, y); ctx.restore();
+}
+// Kinetic line: each glyph rises in from its own mask, and leaves upward through it.
+function maskLine(str, x, y, size, t, tIn, tOut, o = {}) {
+  const { w = 600, f = MIN, col = C.ink, align = 'center', stagger = .035, dur = 1.0, outDur = .55, track = 0, colorFn = null, outDir = -1 } = o;
+  setFont(w, size, f); ctx.save(); ctx.letterSpacing = track + 'px';
+  const chars = [...str], widths = chars.map(c => ctx.measureText(c).width + track);
+  const total = widths.reduce((a, b) => a + b, 0) - track;
+  let cx = align === 'center' ? x - total / 2 : x;
+  const x0 = cx;
+  chars.forEach((ch, i) => {
+    const qi = E.outQuint(clamp((t - tIn - i * stagger) / dur));
+    const qo = tOut == null ? 0 : E.inOutCubic(clamp((t - tOut - i * stagger * .6) / outDur));
+    if (qi > 0 && qo < 1) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(cx - size * .1, y - size * 1.02, widths[i] + size * .2, size * 1.34); ctx.clip();
+      ctx.fillStyle = colorFn ? colorFn(i, ch) : col; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.globalAlpha *= .25 + .75 * qi;
+      ctx.fillText(ch, cx, y + (1 - qi) * size * 1.15 + qo * size * 1.2 * outDir);
+      ctx.restore();
+    }
+    cx += widths[i];
+  });
+  ctx.restore();
+  return { x0, width: total, widths };
+}
+function measure(str, w, size, f, track = 0) { setFont(w, size, f); ctx.save(); ctx.letterSpacing = track + 'px'; const m = ctx.measureText(str).width; ctx.restore(); return m; }
+
+/* ---------- content ---------- */
+const WORDS = [ // the six ways in — they become stations on the path, in this order
+  { jp: '書く', en: 'write', x: 430, y: 300, sz: 86, d: 1.1, t: 2.5, outline: false },
+  { jp: '作る', en: 'make', x: 1490, y: 330, sz: 78, d: .9, t: 2.8125, outline: true },
+  { jp: '教える', en: 'teach', x: 300, y: 720, sz: 72, d: 1.0, t: 3.125, outline: false },
+  { jp: '売る', en: 'sell', x: 1560, y: 770, sz: 92, d: 1.2, t: 3.4375, outline: false },
+  { jp: '支える', en: 'support', x: 1010, y: 880, sz: 66, d: .85, t: 3.75, outline: true },
+  { jp: '発信する', en: 'share', x: 840, y: 215, sz: 70, d: .95, t: 4.0625, outline: false },
+];
+const MINOR = [
+  { jp: '整える', x: 1270, y: 190, t: 2.65625 }, { jp: '描く', x: 640, y: 560, t: 2.96875 },
+  { jp: '話す', x: 1300, y: 590, t: 3.28125 }, { jp: '撮る', x: 190, y: 470, t: 3.59375 },
+  { jp: '調べる', x: 1730, y: 520, t: 3.90625 }, { jp: '届ける', x: 590, y: 900, t: 4.21875 },
+];
+const CARDS = [
+  { no: '01', label: 'ブログ記事', x: 575, y: 420, r: -.07 },
+  { no: '02', label: 'ハンドメイド', x: 1370, y: 470, r: .05 },
+  { no: '03', label: 'オンライン講座', x: 420, y: 590, r: .04 },
+  { no: '04', label: 'ネットショップ', x: 1650, y: 610, r: -.05 },
+  { no: '05', label: 'オンライン秘書', x: 1210, y: 770, r: .06 },
+  { no: '06', label: 'SNS運用', x: 760, y: 770, r: -.04 },
+];
+const BRANCHES = ['構成案', '資料づくり', '教材', '商品説明', '事務作業', '投稿文'];
+const TRIES = [[0, 3, 3.4375], [2, 1, 3.90625], [5, 4, 4.375], [3, 0, 4.6875]];
+const SHAPES = (() => {
+  const r = rng(8), a = [];
+  for (let i = 0; i < 26; i++) a.push({
+    kind: i < 10 ? 'plus' : i < 20 ? 'dot' : 'ring', x: 140 + r() * 1640, y: 150 + r() * 800,
+    s: i < 20 ? 6 + r() * 5 : 18 + r() * 34, d: .4 + r() * .9, t: 2.55 + r() * 1.6, ph: r() * TAU,
+  });
+  return a;
+})();
+
+/* ---------- route group (the path) ---------- */
+function groupT(t) {
+  const m = E.inOutQuart(seg(t, T.finalMove, T.finalMove + 1.1));
+  return { tx: lerp(240, 900, m), ty: lerp(790, 842, m), s: lerp(1, .66, m), r: lerp(0, -.085, m) };
+}
+function gToScreen(g, x, y) {
+  const c = Math.cos(g.r), s = Math.sin(g.r);
+  return [g.tx + (x * c - y * s) * g.s, g.ty + (x * s + y * c) * g.s];
+}
+const STATION_X = i => 120 + i * 250;
+function tipX(t) {
+  if (t < T.lineStart) return 0;
+  const d = t - T.lineStart;
+  if (d < .3125) return 1228.8 * d * d;              // ease in: reaches station 0 on the beat
+  if (t < 6.875) return 120 + (t - T.station0) * 800; // one station per beat
+  return 1370 + 560 * E.outCubic(seg(t, 6.875, 8.95)); // glides out past the frame
+}
+const waveAmp = t => 24 * (1 - E.inOutCubic(seg(t, 5.3, 7.3)));
+const lineY = (x, t) => waveAmp(t) * Math.sin(x * .011 - t * 2.4) * (1 - Math.exp(-x / 160));
+
+/* ---------- word positions ---------- */
+function wander(i, t, amp) {
+  const a = i * 1.7 + .4;
+  return [
+    (Math.sin(t * .55 + a) * 58 + Math.sin(t * .23 + a * 2) * 38) * amp,
+    (Math.cos(t * .47 + a * 1.3) * 32 + Math.sin(t * .31 + a) * 22) * amp,
+  ];
+}
+function wordPose(i, t) {
+  const w = WORDS[i], q = seg(t, w.t, w.t + 1.2);
+  const [wx, wy] = wander(i, t, .35 + .65 * q);
+  const ts = stationT(i), m = E.inOutCubic(seg(t, ts - .3, ts + .8));
+  const g = groupT(t), sx = STATION_X(i);
+  const [px, py] = gToScreen(g, sx, lineY(sx, t) - 30);
+  return { x: lerp(w.x + wx, px, m), y: lerp(w.y + wy, py, m), size: lerp(w.sz, 30 * g.s, m), m, d: lerp(w.d, .9, m) };
+}
+
+/* ---------- scenes ---------- */
+function drawGuides(t) {
+  ctx.save(); ctx.strokeStyle = C.hair2; ctx.lineWidth = 1;
+  for (const x of [140, 1780]) { ctx.beginPath(); ctx.moveTo(x, 150); ctx.lineTo(x, 930); ctx.stroke(); }
+  ctx.strokeStyle = C.hair; for (const [x, y] of [[140, 150], [1780, 150], [140, 930], [1780, 930]]) {
+    ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y); ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawQuestion(t) {
+  if (t > 6) return;
+  const rec = E.inOutCubic(seg(t, T.qRecede, T.qRecede + .9));
+  const gone = E.inOutSine(seg(t, T.qGone, T.qGone + .8));
+  // circles
+  L(.45, () => {
+    ctx.save(); ctx.translate(960, 530);
+    const draw = E.inOutCubic(seg(t, .15, 1.9));
+    const sc = 1 + rec * .45;
+    ctx.globalAlpha = (1 - rec * .65) * (1 - gone);
+    ctx.strokeStyle = C.hair; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, 300 * sc, -PI / 2, -PI / 2 + TAU * draw); ctx.stroke();
+    ctx.setLineDash([2, 7]); ctx.lineDashOffset = -t * 8;
+    ctx.beginPath(); ctx.arc(0, 0, 352 * sc, PI / 2, PI / 2 + TAU * E.inOutCubic(seg(t, .45, 2.2))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  });
+  L(.7, () => {
+    ctx.save();
+    const s = 1 - rec * .1;
+    ctx.translate(960, 540); ctx.scale(s, s); ctx.translate(-960, -540);
+    ctx.globalAlpha = lerp(1, .16, rec) * (1 - gone);
+    maskLine('副業、', 960, 480, 124, t, T.qIn, null, { stagger: .06, dur: 1.1 });
+    maskLine('何から始める？', 960, 634, 124, t, T.qIn + .22, null, { stagger: .06, dur: 1.1 });
+    ctx.restore();
+    const lw = 72 * E.inOutCubic(seg(t, 1.35, 2.2));
+    ctx.fillStyle = C.clay; ctx.globalAlpha = (1 - rec) * (1 - gone);
+    ctx.fillRect(960 - lw / 2, 706, lw, 2); ctx.globalAlpha = 1;
+  });
+}
+
+function drawCards(t) {
+  CARDS.forEach((c, i) => {
+    const tin = 2.6 + i * .15625;
+    const q = E.outQuint(seg(t, tin, tin + 1.1)); if (q <= 0) return;
+    const ts = stationT(i), k = E.inOutCubic(seg(t, ts - .45, ts + .15));
+    if (k >= 1) return;
+    const [wx, wy] = wander(i + 7, t, .45);
+    const g = groupT(t), sx = STATION_X(i), [px, py] = gToScreen(g, sx, lineY(sx, t));
+    const x = lerp(c.x + wx, px, k), y = lerp(c.y + wy + (1 - q) * 22, py, k);
+    L(lerp(.6, .9, k), () => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(c.r * (1 - k) + Math.sin(t * .6 + i) * .01);
+      const s = lerp(1, .04, E.inCubic(k)); ctx.scale(s, s);
+      ctx.globalAlpha = q * (1 - seg(k, .6, 1));
+      ctx.fillStyle = C.card; ctx.strokeStyle = C.hair; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.rect(-104, -66, 208, 132); ctx.fill(); ctx.stroke();
+      text('No.' + c.no, -86, -38, { w: 500, size: 13, col: C.mute, track: 2 });
+      ctx.fillStyle = C.hair; ctx.fillRect(-86, -26, 28, 1);
+      text(c.label, -86, 44, { w: 500, size: 19, col: C.ink2, track: 1 });
+      ctx.restore();
+    });
+  });
+}
+
+function drawShapes(t) {
+  const out = E.inOutSine(seg(t, 5.0, 6.2));
+  for (const s of SHAPES) {
+    const q = E.outQuint(seg(t, s.t, s.t + 1)); if (q <= 0 || out >= 1) continue;
+    L(s.d, () => {
+      const x = s.x + Math.sin(t * .5 + s.ph) * 26, y = s.y + Math.cos(t * .4 + s.ph) * 18 - out * 30;
+      ctx.save(); ctx.globalAlpha = q * (1 - out) * .9; ctx.strokeStyle = C.mute; ctx.fillStyle = C.mute; ctx.lineWidth = 1;
+      if (s.kind === 'plus') { ctx.beginPath(); ctx.moveTo(x - s.s, y); ctx.lineTo(x + s.s, y); ctx.moveTo(x, y - s.s); ctx.lineTo(x, y + s.s); ctx.stroke(); }
+      else if (s.kind === 'dot') { ctx.beginPath(); ctx.arc(x, y, 2, 0, TAU); ctx.fill(); }
+      else { ctx.strokeStyle = C.hair; ctx.beginPath(); ctx.arc(x, y, s.s * (.8 + .2 * q), 0, TAU * q); ctx.stroke(); }
+      ctx.restore();
+    });
+  }
+}
+
+function drawMinor(t) {
+  const out = E.inOutCubic(seg(t, 5.15, 6.2));
+  MINOR.forEach((w, i) => {
+    const q = E.outQuint(seg(t, w.t, w.t + 1.0)); if (q <= 0 || out >= 1) return;
+    const [wx, wy] = wander(i + 20, t, .8);
+    const dx = (w.x - 960) / 960;
+    L(.8, () => {
+      ctx.save(); ctx.globalAlpha = q * (1 - out);
+      text(w.jp, w.x + wx + dx * out * 60, w.y + wy + (1 - q) * 24, { w: 400, size: 28, col: C.mute, align: 'center', track: 4 });
+      ctx.restore();
+    });
+  });
+}
+
+function wordCenter(i, t) { const p = wordPose(i, t); return [p.x, p.y - p.size * .36]; }
+function drawTries(t) {
+  for (const [a, b, t0] of TRIES) {
+    const d = t - t0; if (d < 0 || d > 1.0) continue;
+    const grow = E.inOutCubic(seg(d, 0, .32)), fade = E.inOutCubic(seg(d, .5, .85));
+    const [ax, ay] = wordCenter(a, t), [bx, by] = wordCenter(b, t);
+    L(1, () => {
+      ctx.save(); ctx.strokeStyle = C.mute; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.moveTo(lerp(ax, bx, fade), lerp(ay, by, fade)); ctx.lineTo(lerp(ax, bx, grow), lerp(ay, by, grow)); ctx.stroke();
+      ctx.setLineDash([]);
+      const rr = E.outCubic(seg(d, .25, .7));
+      ctx.globalAlpha = (1 - seg(d, .45, .95)) * .9; ctx.strokeStyle = C.hair;
+      ctx.beginPath(); ctx.arc(bx, by, 30 + rr * 40, 0, TAU); ctx.stroke();
+      ctx.restore();
+    });
+  }
+}
+
+function drawWords(t) {
+  WORDS.forEach((w, i) => {
+    if (t < w.t) return;
+    const p = wordPose(i, t);
+    if (p.m >= 1) return; // handed to the route group
+    L(p.d, () => {
+      ctx.save();
+      const fill = w.outline ? p.m : 1;
+      setFont(600, p.size, MIN);
+      if (w.outline && fill < 1) {
+        // outline version, revealed by the same mask
+        ctx.save(); ctx.globalAlpha = 1 - fill;
+        ctx.beginPath(); ctx.rect(p.x - 400, p.y - p.size * 1.02, 800, p.size * 1.34); ctx.clip();
+        const q = E.outQuint(seg(t, w.t, w.t + 1.0));
+        ctx.textAlign = 'center'; ctx.strokeStyle = C.ink2; ctx.lineWidth = 1;
+        ctx.strokeText(w.jp, p.x, p.y + (1 - q) * p.size * 1.15);
+        ctx.restore();
+      }
+      if (fill > 0) { ctx.globalAlpha = fill; maskLine(w.jp, p.x, p.y, p.size, t, w.t, null, { stagger: .05, dur: 1.0, col: C.ink }); }
+      ctx.globalAlpha = 1 - seg(p.m, 0, .4);
+      const q2 = E.outQuint(seg(t, w.t + .25, w.t + 1.1));
+      text(w.en, p.x, p.y + 40 + (1 - q2) * 10, { w: 400, f: SER, size: 24, col: C.mute, align: 'center', alpha: q2, track: 1 });
+      ctx.restore();
+    });
+  });
+}
+
+function drawRoute(t) {
+  if (t < T.lineStart) return;
+  const g = groupT(t), tip = tipX(t);
+  const outro = E.inOutCubic(seg(t, T.outro + .05, T.outro + .6));
+  const start = outro * 1930;
+  L(.9, () => {
+    ctx.save();
+    ctx.translate(g.tx, g.ty); ctx.rotate(g.r); ctx.scale(g.s, g.s);
+    // the path
+    if (tip > start) {
+      ctx.strokeStyle = C.clay; ctx.lineWidth = 2 / g.s; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let x = start; x <= tip; x += 6) { const y = lineY(x, t); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.lineTo(tip, lineY(tip, t)); ctx.stroke();
+      if (t < 8.9) { ctx.fillStyle = C.clay; ctx.beginPath(); ctx.arc(tip, lineY(tip, t), 3.5 / g.s, 0, TAU); ctx.fill(); }
+    }
+    // origin
+    const o = E.outBack(seg(t, T.lineStart, T.lineStart + .5)) * (1 - seg(outro, 0, .15));
+    if (o > 0) {
+      ctx.fillStyle = C.clay; ctx.beginPath(); ctx.arc(0, lineY(0, t), 5.5 * o / g.s, 0, TAU); ctx.fill();
+      const rp = seg(t, T.lineStart, T.lineStart + 1.1);
+      ctx.strokeStyle = C.clay; ctx.globalAlpha = 1 - rp; ctx.lineWidth = 1 / g.s;
+      ctx.beginPath(); ctx.arc(0, 0, 6 + E.outCubic(rp) * 34, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    // traveller: a small dot that keeps walking the path on the final screen
+    if (t > 12.4 && t < T.outro + .3) {
+      const u = ((t - 12.4) / 2.2) % 1, x = u * 1700, a = Math.sin(PI * u) * (1 - seg(t, T.outro, T.outro + .3));
+      ctx.fillStyle = C.clay; ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, lineY(x, t), 4 / g.s, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // branches (AI adds a little more to each)
+    BRANCHES.forEach((lab, i) => {
+      const tb = T.branch0 + i * .15625, p = E.inOutCubic(seg(t, tb, tb + .7)); if (p <= 0) return;
+      const sx = STATION_X(i), fade = 1 - seg(outro, 0, .5) ;
+      if (sx < start) return;
+      ctx.save(); ctx.globalAlpha = fade * lerp(1, .55, seg(t, T.finalMove, T.finalMove + .8));
+      ctx.strokeStyle = C.ink2; ctx.lineWidth = 1 / g.s;
+      const bez = u => { const m = 1 - u; return [m * m * m * sx + 3 * m * m * u * (sx + 50) + 3 * m * u * u * (sx + 80) + u * u * u * (sx + 100), 3 * m * u * u * 60 + u * u * u * 118]; };
+      ctx.beginPath(); for (let k = 0; k <= 24; k++) { const [x, y] = bez(k / 24 * p); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+      if (p > .9) {
+        const e = E.outBack(seg(t, tb + .6, tb + .95));
+        ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(sx + 100, 118, 4.5 * e, 0, TAU); ctx.fill(); ctx.stroke();
+        const la = E.outQuint(seg(t, tb + .65, tb + 1.3)) * (1 - seg(t, T.finalMove, T.finalMove + .5));
+        text(lab, sx + 114, 124 + (1 - la) * 10, { w: 500, size: 18, col: C.ink2, alpha: la, track: 1 });
+      }
+      ctx.restore();
+    });
+    const ai = E.outQuint(seg(t, 9.8, 10.6)) * (1 - seg(t, T.finalMove, T.finalMove + .5));
+    text('+ AI', 0, 128 + (1 - ai) * 10, { w: 500, f: SER, size: 30, col: C.clay, alpha: ai, align: 'left' });
+    // stations + labels
+    WORDS.forEach((w, i) => {
+      const sx = STATION_X(i), ts = stationT(i); if (t < ts || sx < start - 1) return;
+      const y = lineY(sx, t), e = E.outBack(seg(t, ts, ts + .45), 2);
+      const fade = 1 - seg(outro, 0, .5);
+      ctx.save(); ctx.globalAlpha = fade;
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(sx, y, 4.5 * e, 0, TAU); ctx.fill();
+      ctx.strokeStyle = C.ink2; ctx.lineWidth = 1 / g.s; ctx.globalAlpha = fade * (1 - seg(t, ts + .2, ts + 1.2) * .6);
+      ctx.beginPath(); ctx.arc(sx, y, 4.5 + 10 * e + seg(t, ts, ts + 1.2) * 10, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = fade;
+      if (wordPose(i, t).m >= 1) text(w.jp, sx, y - 30, { w: 600, f: MIN, size: 30, col: C.ink, align: 'center' });
+      const ea = E.outQuint(seg(t, ts + .5, ts + 1.2));
+      text(w.en, sx, y + 42 + (1 - ea) * 8, { w: 400, f: SER, size: 22, col: C.mute, align: 'center', alpha: ea });
+      ctx.restore();
+    });
+    ctx.restore();
+  });
+}
+
+function drawCopies(t) {
+  L(.3, () => {
+    if (t > T.copy1In - .1 && t < T.copy1Out + 1) {
+      const l1 = maskLine('できることから、', 960, 420, 100, t, T.copy1In, T.copy1Out, { stagger: .04, dur: 1.0 });
+      maskLine('副業を探す。', 960, 552, 100, t, T.copy1In + .18, T.copy1Out + .06, { stagger: .04, dur: 1.0 });
+      // underline the key idea: できること
+      const uw = l1.widths.slice(0, 5).reduce((a, b) => a + b, 0);
+      const g = E.inOutCubic(seg(t, 8.25, 8.85)), go = E.inOutCubic(seg(t, T.copy1Out, T.copy1Out + .45));
+      ctx.fillStyle = C.clay; ctx.fillRect(l1.x0 + uw * go, 446, uw * (g - go), 2);
+    }
+    if (t > T.copy2In - .1 && t < T.copy2Out + 1) {
+      maskLine('AIを使えば、', 960, 410, 90, t, T.copy2In, T.copy2Out, { stagger: .04, dur: 1.0 });
+      maskLine('できることはもう少し増やせる。', 960, 536, 84, t, T.copy2In + .18, T.copy2Out + .06, { stagger: .03, dur: 1.0 });
+    }
+  });
+}
+
+function ctaState(t) {
+  const p = E.inOutCubic(seg(t, T.cta, T.cta + .6)) - E.inOutCubic(seg(t, T.outro - .05, T.outro + .4));
+  const q = E.outQuint(seg(t, T.cta + .3, T.cta + 1.0)) * (1 - seg(t, T.outro - .1, T.outro + .15));
+  const cyc = (t - (T.cta + 1.2)) % 2.5, nudge = t > T.cta + 1.2 ? Math.sin(PI * seg(cyc, 0, .6)) * 6 : 0;
+  return { p: clamp(p), q, nudge, wipeOut: t > T.outro - .05 };
+}
+function drawFinal(t) {
+  if (t < T.logo - .1) return;
+  L(.2, () => {
+    const x = 200, out = T.outro;
+    maskLine('HWAM', x, 330, 62, t, T.logo, out, { w: 600, f: SER, align: 'left', track: 20, stagger: .06, dur: 1.0 });
+    const rl = E.inOutCubic(seg(t, T.logo + .15, T.logo + .95)), ro = E.inOutCubic(seg(t, out, out + .5));
+    ctx.fillStyle = C.ink2; ctx.fillRect(x + 440 * ro, 372, 440 * (rl - ro), 1);
+    maskLine('副業の「何から？」を', x - 6, 482, 66, t, T.logo + .25, out + .05, { align: 'left', stagger: .03, dur: 1.0 });
+    maskLine('一緒に整理する。', x - 6, 574, 66, t, T.logo + .4, out + .1, { align: 'left', stagger: .03, dur: 1.0 });
+    if (RENDER) drawCtaCanvas(t);
+  });
+}
+function drawCtaCanvas(t) { // the DOM link replaces this outside of video export
+  const s = ctaState(t); if (s.p <= 0) return;
+  const x = 200, y = 640, w = 380, h = 84;
+  ctx.save();
+  ctx.beginPath(); s.wipeOut ? ctx.rect(x + w * (1 - s.p), y, w * s.p, h) : ctx.rect(x, y, w * s.p, h); ctx.clip();
+  ctx.fillStyle = C.ink; ctx.fillRect(x, y, w, h);
+  ctx.beginPath(); ctx.rect(x, y + 20, w, 46); ctx.clip();
+  text('無料で副業診断', x + 36, y + 51 + (1 - s.q) * 30, { w: 500, size: 24, col: C.paper, track: 6, alpha: s.q });
+  const ax = x + w - 36 - 42 + s.nudge;
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 1; ctx.globalAlpha = s.q;
+  ctx.beginPath(); ctx.moveTo(ax, y + h / 2); ctx.lineTo(ax + 42, y + h / 2); ctx.moveTo(ax + 42 - 8, y + h / 2 - 8); ctx.lineTo(ax + 42, y + h / 2); ctx.stroke();
+  ctx.restore();
+}
+
+const CHAPTERS = [[0, '01', 'QUESTION'], [2.5, '02', 'OPTIONS'], [5.0, '03', 'DIRECTION'], [7.5, '04', 'WHAT YOU CAN DO'], [9.375, '05', 'WITH AI'], [11.25, '06', 'HWAM']];
+function drawIndex(t) {
+  const a = seg(t, .1, .7) * (1 - seg(t, 14.5, 14.95));
+  if (a <= 0) return;
+  let k = 0; CHAPTERS.forEach((c, i) => { if (t >= c[0]) k = i; });
+  const d = t - CHAPTERS[k][0], q = E.outQuint(seg(d, 0, .8));
+  ctx.save(); ctx.globalAlpha = a;
+  const x = 200, y = 1004;
+  ctx.beginPath(); ctx.rect(x - 4, y - 26, 460, 34); ctx.clip();
+  if (k > 0 && q < 1) {
+    text(CHAPTERS[k - 1][1], x, y - q * 30, { w: 500, f: SER, size: 22, col: C.ink2 });
+    text(CHAPTERS[k - 1][2], x + 44, y - 3 - q * 30, { w: 500, size: 11, col: C.mute, track: 3 });
+  }
+  text(CHAPTERS[k][1], x, y + (1 - q) * 30, { w: 500, f: SER, size: 22, col: C.ink2 });
+  text(CHAPTERS[k][2], x + 44, y - 3 + (1 - q) * 30, { w: 500, size: 11, col: C.mute, track: 3 });
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = C.hair; ctx.fillRect(x + 250, y - 7, 160, 1);
+  ctx.fillStyle = C.clay; ctx.fillRect(x + 250, y - 7, 160 * (t / DUR), 1);
+  ctx.restore();
+}
+
+let GRAIN = null;
+function makeGrain() {
+  GRAIN = document.createElement('canvas'); GRAIN.width = GRAIN.height = 240;
+  const g = GRAIN.getContext('2d'), id = g.createImageData(240, 240), r = rng(2);
+  for (let i = 0; i < id.data.length; i += 4) { const v = 110 + r() * 40; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  g.putImageData(id, 0, 0);
+}
+
+/* ---------- frame ---------- */
+let SCALE = 1;
+function renderFrame(t) {
+  t = ((t % DUR) + DUR) % DUR;
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  CAM = camera(t);
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  drawGuides(t);
+  drawQuestion(t);
+  drawCards(t);
+  drawShapes(t);
+  drawMinor(t);
+  drawTries(t);
+  drawRoute(t);
+  drawWords(t);
+  drawCopies(t);
+  drawFinal(t);
+  drawIndex(t);
+  // paper grain
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = .22;
+  ctx.fillStyle = ctx.createPattern(GRAIN, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();
+  syncCta(t);
+}
+const ctaEl = document.getElementById('cta');
+function syncCta(t) {
+  if (RENDER) return;
+  const s = ctaState(t);
+  ctaEl.style.setProperty('--p', s.p.toFixed(4));
+  ctaEl.style.setProperty('--q', s.q.toFixed(4));
+  ctaEl.style.setProperty('--nudge', (s.nudge / 1920 * 100).toFixed(3) + 'cqw');
+  ctaEl.style.clipPath = s.wipeOut ? `inset(0 0 0 ${((1 - s.p) * 100).toFixed(2)}%)` : '';
+  const live = s.p > .6;
+  ctaEl.style.setProperty('--vis', s.p > 0 ? 'visible' : 'hidden');
+  ctaEl.style.pointerEvents = live ? 'auto' : 'none';
+  ctaEl.tabIndex = live ? 0 : -1;
+}
+
+/* ---------- boot ---------- */
+const JPTEXT = '副業、何から始める？書く作る教える売る支える発信する整えるく話撮調べ届けブログ記事ハンドメイドオンライン講座ネットショップ秘書SNS運用構成案資料づくり材商品説明事務作業投稿文できることから探す。AIを使えば増やせ少しもう「」一緒に整理無料で診断';
+async function loadFonts() {
+  const L = [];
+  for (const w of [500, 600, 700]) L.push(document.fonts.load(`${w} 60px "Shippori Mincho B1"`, JPTEXT));
+  for (const w of [400, 500, 700]) L.push(document.fonts.load(`${w} 20px "Zen Kaku Gothic New"`, JPTEXT + 'No.0123456789QUESTIONPTIDRCWHAYUVKM'));
+  for (const s of ['500', '600', 'italic 400', 'italic 500']) L.push(document.fonts.load(`${s} 30px "Cormorant Garamond"`, 'HWAM writemakteachslsuporh+AI0123456789'));
+  await Promise.race([Promise.all(L), new Promise(r => setTimeout(r, 6000))]).catch(() => {});
+}
+function resize() {
+  if (RENDER) { cv.width = W; cv.height = H; SCALE = 1; return; }
+  const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); SCALE = cv.width / W;
+}
+window.renderFrame = renderFrame;
+
+(async () => {
+  await loadFonts(); makeGrain(); resize();
+  window.__ready = true;
+  if (RENDER) { renderFrame(+new URLSearchParams(location.search).get('t') || 0); return; }
+  addEventListener('resize', resize);
+
+  // reduced motion: show the final, clickable state and stop
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { renderFrame(13.6); return; }
+
+  // pointer parallax (subtle)
+  const fv = document.querySelector('.fv');
+  fv.addEventListener('pointermove', e => { const r = fv.getBoundingClientRect(); MOUSE.tx = (e.clientX - r.left) / r.width * 2 - 1; MOUSE.ty = (e.clientY - r.top) / r.height * 2 - 1; });
+  fv.addEventListener('pointerleave', () => { MOUSE.tx = MOUSE.ty = 0; });
+
+  // clock: performance.now, or the audio clock once sound is on (sample-accurate sync, gapless loop)
+  let t0 = performance.now(), audio = null, visible = true;
+  const clock = () => audio && audio.src ? (audio.ac.currentTime - audio.start) : (performance.now() - t0) / 1000;
+  const soundBtn = document.getElementById('sound');
+  soundBtn.addEventListener('click', async () => {
+    if (!audio) {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const res = await fetch('assets/bgm.mp3'), buf = await ac.decodeAudioData(await res.arrayBuffer());
+      const gain = ac.createGain(); gain.gain.value = 0; gain.connect(ac.destination);
+      audio = { ac, buf, gain, src: null, start: 0 };
+    }
+    const on = soundBtn.getAttribute('aria-pressed') !== 'true';
+    const { ac, gain } = audio;
+    if (on) {
+      await ac.resume();
+      const when = ac.currentTime + .05, off = (clock() + .05) % DUR;
+      const src = ac.createBufferSource(); src.buffer = audio.buf; src.loop = true; src.loopStart = 0; src.loopEnd = DUR;
+      src.connect(gain); src.start(when, off);
+      audio.src = src; audio.start = when - off;
+      gain.gain.cancelScheduledValues(ac.currentTime); gain.gain.setTargetAtTime(.9, ac.currentTime, .25);
+    } else {
+      t0 = performance.now() - clock() * 1000; // keep the picture continuous on the fallback clock
+      gain.gain.setTargetAtTime(0, ac.currentTime, .15);
+      const src = audio.src; setTimeout(() => src && src.stop(), 600); audio.src = null;
+    }
+    soundBtn.setAttribute('aria-pressed', String(on)); soundBtn.classList.toggle('on', on);
+    soundBtn.querySelector('.lbl').textContent = on ? 'SOUND ON' : 'SOUND OFF';
+  });
+
+
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(fv);
+  (function loop() {
+    MOUSE.x += (MOUSE.tx - MOUSE.x) * .06; MOUSE.y += (MOUSE.ty - MOUSE.y) * .06;
+    if (visible) renderFrame(clock());
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
