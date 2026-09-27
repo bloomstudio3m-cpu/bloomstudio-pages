@@ -40,7 +40,7 @@ if (stillsArg) {
   const out = path.join(here, 'fv-video.mp4');
   const ff = spawn(process.env.FFMPEG || 'ffmpeg', [
     '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out,
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '15', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let f = 0; f < FPS * DUR; f++) {
     const buf = Buffer.from(await grab(f / FPS, 'image/jpeg'), 'base64');

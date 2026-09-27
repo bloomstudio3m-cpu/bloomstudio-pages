@@ -31,7 +31,7 @@
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
   /* CTA: real link, positioned on the 1920x1080 grid of the canvas */
-  .fv-cta{position:absolute;left:10.4167%;top:59.259%;width:19.792%;height:7.778%;
+  .fv-cta{position:absolute;left:10.4167%;top:67.593%;width:19.792%;height:7.778%;
     display:flex;align-items:center;justify-content:space-between;padding:0 1.875cqw 0 1.875cqw;
     background:var(--ink);color:var(--paper);text-decoration:none;
     font-family:var(--gothic);font-weight:500;font-size:1.25cqw;letter-spacing:.26em;
@@ -66,8 +66,8 @@
 
 <section class="fv" aria-labelledby="fv-title">
   <canvas id="c" aria-hidden="true"></canvas>
-  <h1 id="fv-title" class="sr-only">副業、何から始める？ できることから、副業を探す。AIを使えば、できることはもう少し増やせる。HWAM 副業の「何から？」を一緒に整理する。</h1>
-  <a class="fv-cta" id="cta" href="https://hwam-shindan.netlify.app/"><span>無料で副業診断</span><i aria-hidden="true"></i></a>
+  <h1 id="fv-title" class="sr-only">副業、何から始める？ あなたに合う副業をAIで診断。HWAMの無料AI副業診断「適性の書」</h1>
+  <a class="fv-cta" id="cta" href="https://hwam-shindan.netlify.app/"><span>無料で診断する</span><i aria-hidden="true"></i></a>
   <button class="sound" id="sound" type="button" aria-pressed="false"><span class="eq"><b></b><b></b><b></b></span><span class="lbl">SOUND OFF</span></button>
 </section>
 
@@ -116,7 +116,7 @@ const T = {
   qIn: .35, qHold: 1.6, qRecede: 2.5, qGone: 5.0,
   lineStart: 5.0, station0: 5.3125, stationGap: .3125,
   copy1In: 7.5, copy1Out: 9.1, copy2In: 9.4, branch0: 9.6875, copy2Out: 10.95,
-  finalMove: 11.05, logo: 11.3, cta: 12.1, outro: 14.35,
+  finalMove: 11.05, endQ: 11.35, endSub: 11.65, endSvc: 11.95, cta: 12.2, brand: 12.45, fade: 14.65,
 };
 const stationT = i => T.station0 + i * T.stationGap;
 
@@ -125,7 +125,8 @@ const MOUSE = { x: 0, y: 0, tx: 0, ty: 0 };
 let CAM = { x: 0, y: 0 };
 function camera(t) {
   const ph = TAU * t / DUR; // periodic over the loop -> seamless
-  return { x: Math.sin(ph) * 12 + MOUSE.x * 18, y: Math.sin(ph * 2) * 6 + MOUSE.y * 12 };
+  const calm = 1 - E.inOutCubic(seg(t, 11.0, 12.6));
+  return { x: Math.sin(ph) * 12 * calm + MOUSE.x * 18, y: Math.sin(ph * 2) * 6 * calm + MOUSE.y * 12 };
 }
 function L(d, fn) { ctx.save(); ctx.translate(-CAM.x * d, -CAM.y * d); fn(); ctx.restore(); }
 
@@ -373,10 +374,9 @@ function drawWords(t) {
 function drawRoute(t) {
   if (t < T.lineStart) return;
   const g = groupT(t), tip = tipX(t);
-  const outro = E.inOutCubic(seg(t, T.outro + .05, T.outro + .6));
-  const start = outro * 1930;
+  const outro = 0, start = 0;
   L(.9, () => {
-    ctx.save();
+    ctx.save(); ctx.globalAlpha = endFade(t);
     ctx.translate(g.tx, g.ty); ctx.rotate(g.r); ctx.scale(g.s, g.s);
     // the path
     if (tip > start) {
@@ -392,19 +392,14 @@ function drawRoute(t) {
       ctx.fillStyle = C.clay; ctx.beginPath(); ctx.arc(0, lineY(0, t), 5.5 * o / g.s, 0, TAU); ctx.fill();
       const rp = seg(t, T.lineStart, T.lineStart + 1.1);
       ctx.strokeStyle = C.clay; ctx.globalAlpha = 1 - rp; ctx.lineWidth = 1 / g.s;
-      ctx.beginPath(); ctx.arc(0, 0, 6 + E.outCubic(rp) * 34, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
-    }
-    // traveller: a small dot that keeps walking the path on the final screen
-    if (t > 12.4 && t < T.outro + .3) {
-      const u = ((t - 12.4) / 2.2) % 1, x = u * 1700, a = Math.sin(PI * u) * (1 - seg(t, T.outro, T.outro + .3));
-      ctx.fillStyle = C.clay; ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, lineY(x, t), 4 / g.s, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(0, 0, 6 + E.outCubic(rp) * 34, 0, TAU); ctx.stroke(); ctx.globalAlpha = endFade(t);
     }
     // branches (AI adds a little more to each)
     BRANCHES.forEach((lab, i) => {
       const tb = T.branch0 + i * .15625, p = E.inOutCubic(seg(t, tb, tb + .7)); if (p <= 0) return;
       const sx = STATION_X(i), fade = 1 - seg(outro, 0, .5) ;
       if (sx < start) return;
-      ctx.save(); ctx.globalAlpha = fade * lerp(1, .55, seg(t, T.finalMove, T.finalMove + .8));
+      ctx.save(); ctx.globalAlpha = endFade(t) * fade * lerp(1, .55, seg(t, T.finalMove, T.finalMove + .8));
       ctx.strokeStyle = C.ink2; ctx.lineWidth = 1 / g.s;
       const bez = u => { const m = 1 - u; return [m * m * m * sx + 3 * m * m * u * (sx + 50) + 3 * m * u * u * (sx + 80) + u * u * u * (sx + 100), 3 * m * u * u * 60 + u * u * u * 118]; };
       ctx.beginPath(); for (let k = 0; k <= 24; k++) { const [x, y] = bez(k / 24 * p); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
@@ -423,11 +418,12 @@ function drawRoute(t) {
       const sx = STATION_X(i), ts = stationT(i); if (t < ts || sx < start - 1) return;
       const y = lineY(sx, t), e = E.outBack(seg(t, ts, ts + .45), 2);
       const fade = 1 - seg(outro, 0, .5);
-      ctx.save(); ctx.globalAlpha = fade;
+      const ef = endFade(t);
+      ctx.save(); ctx.globalAlpha = fade * ef;
       ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(sx, y, 4.5 * e, 0, TAU); ctx.fill();
-      ctx.strokeStyle = C.ink2; ctx.lineWidth = 1 / g.s; ctx.globalAlpha = fade * (1 - seg(t, ts + .2, ts + 1.2) * .6);
+      ctx.strokeStyle = C.ink2; ctx.lineWidth = 1 / g.s; ctx.globalAlpha = fade * ef * (1 - seg(t, ts + .2, ts + 1.2) * .6);
       ctx.beginPath(); ctx.arc(sx, y, 4.5 + 10 * e + seg(t, ts, ts + 1.2) * 10, 0, TAU); ctx.stroke();
-      ctx.globalAlpha = fade;
+      ctx.globalAlpha = fade * ef;
       if (wordPose(i, t).m >= 1) text(w.jp, sx, y - 30, { w: 600, f: MIN, size: 30, col: C.ink, align: 'center' });
       const ea = E.outQuint(seg(t, ts + .5, ts + 1.2));
       text(w.en, sx, y + 42 + (1 - ea) * 8, { w: 400, f: SER, size: 22, col: C.mute, align: 'center', alpha: ea });
@@ -454,34 +450,47 @@ function drawCopies(t) {
   });
 }
 
+// ending fades out by opacity only, then the loop restarts from the empty page
+const endFade = t => 1 - E.inOutSine(seg(t, T.fade, DUR));
+const CTA_BOX = { x: 200, y: 730, w: 380, h: 84 };
 function ctaState(t) {
-  const p = E.inOutCubic(seg(t, T.cta, T.cta + .6)) - E.inOutCubic(seg(t, T.outro - .05, T.outro + .4));
-  const q = E.outQuint(seg(t, T.cta + .3, T.cta + 1.0)) * (1 - seg(t, T.outro - .1, T.outro + .15));
-  const cyc = (t - (T.cta + 1.2)) % 2.5, nudge = t > T.cta + 1.2 ? Math.sin(PI * seg(cyc, 0, .6)) * 6 : 0;
-  return { p: clamp(p), q, nudge, wipeOut: t > T.outro - .05 };
+  const p = E.inOutCubic(seg(t, T.cta, T.cta + .5));
+  const q = E.outQuint(seg(t, T.cta + .2, T.cta + .75));
+  return { p, q, o: endFade(t), nudge: 0, wipeOut: false };
 }
+// Ending: settles into a real website first view. No parallax, no blur; drawn above the grain.
+// Reading order: 副業、何から始める？ → あなたに合う副業をAIで診断。 → 無料AI副業診断「適性の書」 → CTA, signed HWAM.
 function drawFinal(t) {
-  if (t < T.logo - .1) return;
-  L(.2, () => {
-    const x = 200, out = T.outro;
-    maskLine('HWAM', x, 330, 62, t, T.logo, out, { w: 600, f: SER, align: 'left', track: 20, stagger: .06, dur: 1.0 });
-    const rl = E.inOutCubic(seg(t, T.logo + .15, T.logo + .95)), ro = E.inOutCubic(seg(t, out, out + .5));
-    ctx.fillStyle = C.ink2; ctx.fillRect(x + 440 * ro, 372, 440 * (rl - ro), 1);
-    maskLine('副業の「何から？」を', x - 6, 482, 66, t, T.logo + .25, out + .05, { align: 'left', stagger: .03, dur: 1.0 });
-    maskLine('一緒に整理する。', x - 6, 574, 66, t, T.logo + .4, out + .1, { align: 'left', stagger: .03, dur: 1.0 });
-    if (RENDER) drawCtaCanvas(t);
-  });
+  if (t < T.endQ - .05) return;
+  const x = 200;
+  ctx.save(); ctx.globalAlpha = endFade(t);
+  // brand: signs the block last
+  const b = E.outCubic(seg(t, T.brand, T.brand + .6));
+  text('HWAM', x, 292, { w: 600, f: SER, size: 40, col: C.ink, track: 16, alpha: b });
+  ctx.fillStyle = C.ink2; ctx.globalAlpha = endFade(t);
+  ctx.fillRect(x, 322, 440 * E.inOutCubic(seg(t, T.brand + .1, T.brand + .8)), 1);
+  // the question, now answered below it
+  maskLine('副業、何から始める？', x - 4, 448, 88, t, T.endQ, null, { align: 'left', stagger: .028, dur: .9 });
+  maskLine('あなたに合う副業を', x - 2, 536, 50, t, T.endSub, null, { align: 'left', stagger: .025, dur: .85 });
+  maskLine('AIで診断。', x - 2, 602, 50, t, T.endSub + .12, null, { align: 'left', stagger: .025, dur: .85 });
+  // service name, right above the button
+  const sv = E.outCubic(seg(t, T.endSvc, T.endSvc + .6)), sy = 690 + (1 - sv) * 10;
+  text('無料AI副業診断', x, sy, { w: 500, size: 28, col: C.ink, track: 3, alpha: sv });
+  const lw = measure('無料AI副業診断', 500, 28, GOT, 3);
+  text('「適性の書」', x + lw + 2, sy + 3, { w: 600, f: MIN, size: 46, col: C.ink, alpha: sv });
+  ctx.restore();
+  if (RENDER) drawCtaCanvas(t);
 }
 function drawCtaCanvas(t) { // the DOM link replaces this outside of video export
   const s = ctaState(t); if (s.p <= 0) return;
-  const x = 200, y = 640, w = 380, h = 84;
-  ctx.save();
+  const { x, y, w, h } = CTA_BOX;
+  ctx.save(); ctx.globalAlpha = s.o;
   ctx.beginPath(); s.wipeOut ? ctx.rect(x + w * (1 - s.p), y, w * s.p, h) : ctx.rect(x, y, w * s.p, h); ctx.clip();
   ctx.fillStyle = C.ink; ctx.fillRect(x, y, w, h);
   ctx.beginPath(); ctx.rect(x, y + 20, w, 46); ctx.clip();
-  text('無料で副業診断', x + 36, y + 51 + (1 - s.q) * 30, { w: 500, size: 24, col: C.paper, track: 6, alpha: s.q });
+  text('無料で診断する', x + 36, y + 51 + (1 - s.q) * 30, { w: 500, size: 24, col: C.paper, track: 6, alpha: s.q });
   const ax = x + w - 36 - 42 + s.nudge;
-  ctx.strokeStyle = C.paper; ctx.lineWidth = 1; ctx.globalAlpha = s.q;
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 1; ctx.globalAlpha = s.q * s.o;
   ctx.beginPath(); ctx.moveTo(ax, y + h / 2); ctx.lineTo(ax + 42, y + h / 2); ctx.moveTo(ax + 42 - 8, y + h / 2 - 8); ctx.lineTo(ax + 42, y + h / 2); ctx.stroke();
   ctx.restore();
 }
@@ -532,11 +541,11 @@ function renderFrame(t) {
   drawRoute(t);
   drawWords(t);
   drawCopies(t);
-  drawFinal(t);
   drawIndex(t);
   // paper grain
   ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = .22;
   ctx.fillStyle = ctx.createPattern(GRAIN, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();
+  drawFinal(t);
   syncCta(t);
 }
 const ctaEl = document.getElementById('cta');
@@ -546,15 +555,15 @@ function syncCta(t) {
   ctaEl.style.setProperty('--p', s.p.toFixed(4));
   ctaEl.style.setProperty('--q', s.q.toFixed(4));
   ctaEl.style.setProperty('--nudge', (s.nudge / 1920 * 100).toFixed(3) + 'cqw');
-  ctaEl.style.clipPath = s.wipeOut ? `inset(0 0 0 ${((1 - s.p) * 100).toFixed(2)}%)` : '';
-  const live = s.p > .6;
+  ctaEl.style.setProperty('--o', s.o.toFixed(4));
+  const live = s.p > .6 && s.o > .3;
   ctaEl.style.setProperty('--vis', s.p > 0 ? 'visible' : 'hidden');
   ctaEl.style.pointerEvents = live ? 'auto' : 'none';
   ctaEl.tabIndex = live ? 0 : -1;
 }
 
 /* ---------- boot ---------- */
-const JPTEXT = '副業、何から始める？書く作る教える売る支える発信する整えるく話撮調べ届けブログ記事ハンドメイドオンライン講座ネットショップ秘書SNS運用構成案資料づくり材商品説明事務作業投稿文できることから探す。AIを使えば増やせ少しもう「」一緒に整理無料で診断';
+const JPTEXT = '副業、何から始める？書く作る教える売る支える発信する整えるく話撮調べ届けブログ記事ハンドメイドオンライン講座ネットショップ秘書SNS運用構成案資料づくり材商品説明事務作業投稿文できることから探す。AIを使えば増やせ少しもう「」一緒に整理無料で診断あなた合う適性の書する';
 async function loadFonts() {
   const L = [];
   for (const w of [500, 600, 700]) L.push(document.fonts.load(`${w} 60px "Shippori Mincho B1"`, JPTEXT));
@@ -576,7 +585,7 @@ window.renderFrame = renderFrame;
   addEventListener('resize', resize);
 
   // reduced motion: show the final, clickable state and stop
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { renderFrame(13.6); return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { renderFrame(14); return; }
 
   // pointer parallax (subtle)
   const fv = document.querySelector('.fv');
