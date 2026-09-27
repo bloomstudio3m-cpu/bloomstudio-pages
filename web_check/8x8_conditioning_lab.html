@@ -43,7 +43,7 @@
   /* 2枚目 */
   .head{ margin-bottom:48px; }
   .head h1{ font-size:72px; letter-spacing:.08em; margin-top:16px; }
-  .good{ list-style:none; margin:16px 0 52px; }
+  .good{ list-style:none; margin:8px 0 40px; }
   .good li{ padding:20px 0 20px 52px; border-bottom:1px dotted var(--line); position:relative; }
   .good li::before{ content:""; position:absolute; left:8px; top:33px; width:22px; height:22px; border-radius:50%; border:3px solid var(--gold); }
   .good b{ display:block; font-size:34px; color:var(--navy); font-weight:700; line-height:1.5; }
@@ -51,12 +51,12 @@
   .issue{ background:var(--white); border:1px solid var(--line); border-radius:12px; padding:28px 40px 30px; margin-top:22px; }
   .issue .top{ display:flex; align-items:center; gap:18px; }
   .no{ font-family:"Cormorant Garamond",serif; font-size:46px; color:var(--gold); font-weight:600; line-height:1; }
-  .tag{ font-size:24px; color:var(--navy); border:1.5px solid var(--navy); border-radius:30px; padding:4px 18px; letter-spacing:.06em; font-weight:500; }
+  .tag{ white-space:nowrap; flex-shrink:0; font-size:24px; color:var(--navy); border:1.5px solid var(--navy); border-radius:30px; padding:4px 18px; letter-spacing:.06em; font-weight:500; }
   .issue h3{ font-size:35px; color:var(--navy); font-weight:700; line-height:1.4; }
   .issue p{ font-size:29px; line-height:1.65; margin-top:14px; }
   .issue p.why{ color:var(--sub); margin-top:8px; padding-left:44px; position:relative; }
   .issue p.why::before{ content:"→"; position:absolute; left:0; color:var(--gold); }
-  .memo{ margin-top:36px; }
+  .memo{ margin-top:24px; }
   .memo .row{ display:flex; gap:24px; padding:20px 0; border-bottom:1px dotted var(--line); }
   .memo .k{ flex:0 0 100px; font-size:28px; color:var(--gold); font-weight:700; letter-spacing:.08em; padding-top:2px; }
   .memo .v{ font-size:30px; line-height:1.6; color:var(--navy); font-weight:500; }
@@ -104,7 +104,7 @@
 
   <dl class="scope">
     <dt>今回拝見したもの</dt>
-    <dd>公式サイト（体が硬い・運動不足の方向けページ ほか）／Google検索での表示／外部の掲載サイト・Instagram／公式LINEへの導線</dd>
+    <dd>公式サイト（はじめての方向けページ）／Google検索での表示／外部の掲載サイト／公式LINE・Instagramへの導線</dd>
   </dl>
   <p class="date">2026.09.27</p>
 </section>
@@ -119,35 +119,35 @@
 
   <h2>良いところ</h2>
   <ul class="good">
-    <li><b>検索結果に地域名とサービス名が入っている</b><span>「東日本橋・馬喰町」「マシンピラティス」で探す方に見つけてもらいやすい形です</span></li>
-    <li><b>「体が硬い・運動不足の方」専用のページがある</b><span>運動に不安がある方の入口がすでにあります</span></li>
-    <li><b>7:00〜23:00・無休／駅徒歩3分／お客様の声</b><span>比較するときの判断材料が揃っています</span></li>
+    <li><b>不安に寄り添う流れで1ページが組まれている</b><span>共感・特徴・声・料金・質問と、比べる材料がそろっています</span></li>
+    <li><b>料金を「1回あたり」まで明記</b><span>他店と比べるときに判断しやすく、安心材料になっています</span></li>
+    <li><b>代表の経歴と、接骨院併設という強み</b><span>「体を診られるジム」という専門性がしっかり伝わります</span></li>
   </ul>
 
   <h2>改善優先度が高いところ</h2>
   <div class="issue">
-    <div class="top"><span class="no">01</span><span class="tag">導線</span><h3>初回の入口が複数ある</h3></div>
-    <p>サイト内に「無料カウンセリング」と「体験 500円」、外部予約サイトには別の初回メニュー</p>
-    <p class="why">比べている段階の方は、選択肢が多いと迷って手が止まりやすくなります</p>
+    <div class="top"><span class="no">01</span><span class="tag">スマホ</span><h3>固定メニューに「予約」がない</h3></div>
+    <p>画面下に常に出るメニューは「HOME・アクセス・お問い合わせ」の3つ</p>
+    <p class="why">予約したくなった瞬間に押せる場所にあると、止まりにくくなります</p>
   </div>
   <div class="issue">
-    <div class="top"><span class="no">02</span><span class="tag">情報の鮮度</span><h3>期限を過ぎた表記が検索に出ている</h3></div>
-    <p>Google検索の説明文に「2026年4月30日まで」のキャンペーン表記（9月27日時点）</p>
-    <p class="why">「今も受けられるのかな？」と、予約前に不安が残りやすくなります</p>
+    <div class="top"><span class="no">02</span><span class="tag">導線</span><h3>公式LINEへの入口がページ内にない</h3></div>
+    <p>予約方法は電話と予約カレンダーの2つ。LINE・Instagramへのリンクはなし</p>
+    <p class="why">電話は気が引ける方も、LINEなら気軽に相談しやすくなります</p>
   </div>
   <div class="issue">
-    <div class="top"><span class="no">03</span><span class="tag">スマホ</span><h3>LINE予約が文章での手順案内</h3></div>
-    <p>ページ内で「登録→友だち追加→トーク」と手順を説明</p>
-    <p class="why">スマホではボタン1つで進める方が、途中で止まりにくくなります</p>
+    <div class="top"><span class="no">03</span><span class="tag">SEO</span><h3>お客様の声が画像のみで掲載</h3></div>
+    <p>声は写真で掲載され、ページ内の画像の説明（alt）もすべて空欄</p>
+    <p class="why">画像の中の文字は検索で読み取られにくく、声が活かされにくくなります</p>
   </div>
 
   <div class="memo">
-    <div class="row"><div class="k">SEO</div><div class="v">ページのURLが「/2136-2/」、タイトルに地域名がない<span>「馬喰町 初心者 ジム」などで探す方に届きにくくなります</span></div></div>
-    <div class="row"><div class="k">MEO</div><div class="v">店名の表記が掲載先ごとに異なる<span>「エイトバイエイト」「8×8 Conditioning.Lab」など。そろえると地図検索での評価がまとまりやすくなります</span></div></div>
-    <div class="row"><div class="k">SNS</div><div class="v">Instagramは「40代から」、サイトは「体が硬い・運動不足の方」<span>伝える相手がそろうと、SNSから来た方も迷わず読み進められます</span></div></div>
+    <div class="row"><div class="k">SEO</div><div class="v">タイトルに地域名がなく、URLは「/2136-2/」<span>「馬喰町 パーソナルジム 初心者」などで探す方に届きにくくなります</span></div></div>
+    <div class="row"><div class="k">MEO</div><div class="v">店名・営業時間の表記が場所によって異なる<span>店名はサイト内でも複数の表記。営業時間はサイト21:30、一部の掲載サイト23:00</span></div></div>
+    <div class="row"><div class="k">信頼性</div><div class="v">「プライバシーポリシー」がGoogleのページにつながっている<span>お店の方針ページがあると、予約時の安心感につながります</span></div></div>
   </div>
 
-  <p class="note">※2026年9月27日時点で、Google検索結果・公開ページ・外部掲載情報から確認できた内容です。表示速度などの実測値は含んでいません。</p>
+  <p class="note">※2026年9月27日時点の公開ページ（ソースを含む）・Google検索結果・外部掲載情報から確認した内容です。表示速度の実測値は含んでいません。</p>
 </section>
 
 <!-- ===== 3枚目 ===== -->
@@ -161,27 +161,27 @@
   <div class="lv" style="margin-top:0">
     <div class="lv-h"><span class="n">①</span><b>すぐ改善</b><span class="sub">今のサイトのままでできること</span></div>
     <ul>
-      <li><b>キャンペーンの期限・内容を最新に更新</b><span>検索結果の時点で「今受けられる」と伝わる</span></li>
-      <li><b>店名の表記をひとつにそろえる</b><span>サイト・Googleマップ・掲載サイトの情報がひとつにつながる</span></li>
-      <li><b>このページのタイトルに地域名を入れる</b><span>近くで「運動をはじめたい」と探している方に届きやすくなる</span></li>
+      <li><b>スマホの固定メニューに「予約」を追加</b><span>読んでいる途中でも、ワンタップで予約に進める</span></li>
+      <li><b>予約ボタンの横に、公式LINEの入口を</b><span>電話が苦手な方も、気軽に相談から始められる</span></li>
+      <li><b>店名・営業時間の表記をそろえる</b><span>サイト・Googleマップ・掲載サイトで、正しい情報が伝わる</span></li>
     </ul>
   </div>
 
   <div class="lv">
     <div class="lv-h"><span class="n">②</span><b>リニューアル時に改善</b></div>
     <ul>
-      <li><b>「はじめての方」の入口をひとつに整理</b><span>迷わず最初の一歩を選べる</span></li>
-      <li><b>スマホで常に見えるLINE予約ボタン</b><span>読みながら、そのまま予約に進める</span></li>
-      <li><b>内容が伝わるURLと、表示速度の計測・改善</b><span>検索でも共有でも内容が伝わり、読み込み待ちも減らせる</span></li>
+      <li><b>お客様の声を文字でも掲載し、画像に説明をつける</b><span>検索にも、スマホでの読みやすさにもつながる</span></li>
+      <li><b>タイトルとURLに地域名・内容を入れる</b><span>近くで探している初心者の方に届きやすくなる</span></li>
+      <li><b>画像・予約カレンダー・動画の読み込みを整理</b><span>スマホでの表示が軽くなり、読み進めやすくなる</span></li>
     </ul>
   </div>
 
   <div class="lv">
     <div class="lv-h"><span class="n">③</span><b>今後強化</b></div>
     <ul>
-      <li><b>Instagramとサイトで「誰のためのジムか」をそろえる</b><span>SNS → サイト → 予約の流れがひとつにつながる</span></li>
-      <li><b>お客様の声を悩み別に整理</b><span>体の硬さ・運動不足・姿勢など、同じ悩みの声が見つかる</span></li>
-      <li><b>接骨院の知見という強みを、比較の場面で伝わる形に</b><span>他のジムとの違いが、はじめての方にも分かりやすくなる</span></li>
+      <li><b>お店のプライバシーポリシーページを用意</b><span>予約・お問い合わせのときの安心感が高まる</span></li>
+      <li><b>アクセス解析の設定を整理</b><span>計測タグが複数あるため、整えると予約につながったページが分かる</span></li>
+      <li><b>Instagramの発信とこのページをつなぐ</b><span>SNSで知った方が、そのまま予約まで進める</span></li>
     </ul>
   </div>
 
