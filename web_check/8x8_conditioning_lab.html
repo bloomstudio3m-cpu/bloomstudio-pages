@@ -63,6 +63,26 @@
   .memo .v span{ display:block; color:var(--sub); font-size:28px; margin-top:4px; font-weight:400; }
   .c2 .note, .c3 .note{ margin-top:auto; padding-top:36px; }
 
+
+  /* 基本診断チェック */
+  .sub-h{ font-size:28px; color:var(--sub); margin:6px 0 20px; line-height:1.6; }
+  table.hit{ width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:56px; }
+  table.hit th{ font-size:24px; color:var(--gold); font-weight:700; letter-spacing:.08em; text-align:left; padding:20px 24px 14px; border-bottom:1px solid var(--line); }
+  table.hit th.c, table.hit td.c{ text-align:center; width:190px; white-space:nowrap; padding-left:8px; padding-right:8px; }
+  table.hit td{ font-size:29px; padding:20px 24px; border-bottom:1px dotted var(--line); color:var(--navy); font-weight:500; }
+  table.hit tr:last-child td{ border-bottom:none; }
+  .yes{ color:var(--navy); font-weight:700; }
+  .no-hit{ color:var(--sub); }
+  .legend{ display:flex; gap:28px; font-size:24px; color:var(--sub); margin:0 0 8px; }
+  .mk{ display:inline-flex; width:52px; height:52px; border-radius:50%; align-items:center; justify-content:center; font-size:26px; font-weight:700; flex:0 0 52px; }
+  .mk.a{ background:var(--navy); color:#fff; }
+  .mk.b{ border:2px solid var(--navy); color:var(--navy); }
+  .mk.c{ border:2px solid var(--gold); color:var(--gold); }
+  .mk.d{ border:2px dashed var(--line); color:var(--sub); }
+  .legend .mk{ width:36px; height:36px; flex-basis:36px; font-size:18px; margin-right:8px; vertical-align:middle; }
+  .chk .row{ display:flex; gap:24px; align-items:flex-start; padding:18px 0; border-bottom:1px dotted var(--line); }
+  .chk .k{ flex:0 0 150px; font-size:29px; color:var(--navy); font-weight:700; padding-top:8px; }
+  .chk .v{ font-size:28px; line-height:1.6; color:var(--ink); padding-top:6px; }
   /* 3枚目 */
   .lv{ margin-top:64px; }
   .lv-h{ display:flex; align-items:baseline; gap:20px; padding-bottom:18px; border-bottom:2px solid var(--navy); }
@@ -84,7 +104,7 @@
 
 <!-- ===== 1枚目 ===== -->
 <section class="card c1" id="card1">
-  <div class="page">01 / 03</div>
+  <div class="page">01 / 04</div>
   <div class="en">WEB SITE CHECK</div>
   <h1>無料Web診断</h1>
   <div class="rule"></div>
@@ -111,7 +131,7 @@
 
 <!-- ===== 2枚目 ===== -->
 <section class="card c2" id="card2">
-  <div class="page">02 / 03</div>
+  <div class="page">02 / 04</div>
   <div class="head">
     <div class="en">DIAGNOSIS</div>
     <h1>現在のサイト診断</h1>
@@ -150,9 +170,45 @@
   <p class="note">※2026年9月27日時点の公開ページ（ソースを含む）・Google検索結果・外部掲載情報から確認した内容です。表示速度の実測値は含んでいません。</p>
 </section>
 
-<!-- ===== 3枚目 ===== -->
+<!-- ===== 3枚目：基本診断チェック ===== -->
+<section class="card c2" id="card-check">
+  <div class="page">03 / 04</div>
+  <div class="head">
+    <div class="en">BASIC CHECK</div>
+    <h1>基本診断チェック</h1>
+  </div>
+
+  <h2>検索での見え方</h2>
+  <p class="sub-h">お客様が探しそうな言葉で検索したときの表示状況です</p>
+  <table class="hit">
+    <tr><th>検索した言葉</th><th class="c">検索結果</th><th class="c">AIの回答</th></tr>
+    <tr><td>馬喰町 パーソナルジム</td><td class="c yes">表示あり</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>馬喰横山 マシンピラティス</td><td class="c yes">表示あり</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>東日本橋 パーソナルジム 初心者</td><td class="c no-hit">表示なし</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>東日本橋 運動不足 40代 ジム</td><td class="c no-hit">表示なし</td><td class="c no-hit">名前なし</td></tr>
+  </table>
+
+  <h2>10項目チェック</h2>
+  <div class="legend"><span><span class="mk a">◎</span>できている</span><span><span class="mk b">○</span>一部できている</span><span><span class="mk c">△</span>伸びしろ</span><span><span class="mk d">—</span>未計測</span></div>
+  <div class="chk">
+    <div class="row"><span class="mk b">○</span><div class="k">SEO</div><div class="v">トップは地域名入りのタイトル。はじめての方向けページは地域名なし・画像説明が空欄</div></div>
+    <div class="row"><span class="mk b">○</span><div class="k">MEO</div><div class="v">Googleマップに登録済みで、サイトからリンクあり。表記の統一が伸びしろ</div></div>
+    <div class="row"><span class="mk c">△</span><div class="k">AIO</div><div class="v">AIの回答に店名が出てこない。店舗情報をAIが読み取れる形（構造化データ）で未設定</div></div>
+    <div class="row"><span class="mk c">△</span><div class="k">基本情報</div><div class="v">店名の表記が複数、営業時間が掲載先で異なる</div></div>
+    <div class="row"><span class="mk c">△</span><div class="k">スマホ</div><div class="v">固定メニューに「予約」がない</div></div>
+    <div class="row"><span class="mk b">○</span><div class="k">導線</div><div class="v">電話・予約カレンダーがページ内に3か所。LINEの入口はなし</div></div>
+    <div class="row"><span class="mk c">△</span><div class="k">アクセス</div><div class="v">最寄り駅・徒歩分数・駐車場の案内なし</div></div>
+    <div class="row"><span class="mk a">◎</span><div class="k">内容</div><div class="v">不安への共感・料金・よくある質問・代表あいさつまで充実</div></div>
+    <div class="row"><span class="mk b">○</span><div class="k">信頼性</div><div class="v">代表の経歴・お客様の声あり。プライバシーポリシーが伸びしろ</div></div>
+    <div class="row"><span class="mk d">—</span><div class="k">表示速度</div><div class="v">未計測。大きな画像・予約カレンダー2つ・動画を読み込む構成</div></div>
+  </div>
+
+  <p class="note">※検索結果は地域・端末・時期によって変わるため参考値です（9月27日確認）。</p>
+</section>
+
+<!-- ===== 4枚目 ===== -->
 <section class="card c3" id="card3">
-  <div class="page">03 / 03</div>
+  <div class="page">04 / 04</div>
   <div class="head">
     <div class="en">NEXT STEP</div>
     <h1>改善するとできること</h1>
@@ -180,9 +236,9 @@
   <div class="lv">
     <div class="lv-h"><span class="n">③</span><b>今後強化</b></div>
     <ul>
+      <li><b>店舗情報をAIにも伝わる形で設定（AIO対策）</b><span>住所・営業時間・よくある質問を、AIや検索が正しく読み取れるようになる</span></li>
       <li><b>お店のプライバシーポリシーページを用意</b><span>予約・お問い合わせのときの安心感が高まる</span></li>
       <li><b>アクセス解析の設定を整理</b><span>計測タグが複数あるため、整えると予約につながったページが分かる</span></li>
-      <li><b>Instagramの発信とこのページをつなぐ</b><span>SNSで知った方が、そのまま予約まで進める</span></li>
     </ul>
   </div>
 
