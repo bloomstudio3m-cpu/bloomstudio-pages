@@ -68,7 +68,8 @@
   .sub-h{ font-size:28px; color:var(--sub); margin:6px 0 20px; line-height:1.6; }
   table.hit{ width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:56px; }
   table.hit th{ font-size:24px; color:var(--gold); font-weight:700; letter-spacing:.08em; text-align:left; padding:20px 24px 14px; border-bottom:1px solid var(--line); }
-  table.hit th.c, table.hit td.c{ text-align:center; width:190px; white-space:nowrap; padding-left:8px; padding-right:8px; }
+  table.hit th.c, table.hit td.c{ text-align:center; width:140px; white-space:nowrap; padding-left:4px; padding-right:4px; }
+  table.hit td:first-child{ font-size:25px; white-space:nowrap; padding-right:4px; }
   table.hit td{ font-size:29px; padding:20px 24px; border-bottom:1px dotted var(--line); color:var(--navy); font-weight:500; }
   table.hit tr:last-child td{ border-bottom:none; }
   .yes{ color:var(--navy); font-weight:700; }
@@ -181,18 +182,19 @@
   <h2>検索での見え方</h2>
   <p class="sub-h">お客様が探しそうな言葉で検索したときの表示状況です</p>
   <table class="hit">
-    <tr><th>検索した言葉</th><th class="c">検索結果</th><th class="c">AIの回答</th></tr>
-    <tr><td>馬喰町 パーソナルジム</td><td class="c yes">表示あり</td><td class="c no-hit">名前なし</td></tr>
-    <tr><td>馬喰横山 マシンピラティス</td><td class="c yes">表示あり</td><td class="c no-hit">名前なし</td></tr>
-    <tr><td>東日本橋 パーソナルジム 初心者</td><td class="c no-hit">表示なし</td><td class="c no-hit">名前なし</td></tr>
-    <tr><td>東日本橋 運動不足 40代 ジム</td><td class="c no-hit">表示なし</td><td class="c no-hit">名前なし</td></tr>
+    <tr><th>検索した言葉</th><th class="c">Web検索</th><th class="c">Googleマップ</th><th class="c">AIの回答</th></tr>
+    <tr><td>馬喰町 パーソナルジム</td><td class="c yes">表示あり</td><td class="c no-hit">—</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>馬喰横山 マシンピラティス</td><td class="c yes">表示あり</td><td class="c no-hit">—</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>東日本橋 パーソナルジム 初心者</td><td class="c no-hit">表示なし</td><td class="c no-hit">上位になし</td><td class="c no-hit">名前なし</td></tr>
+    <tr><td>東日本橋 運動不足 40代 ジム</td><td class="c no-hit">表示なし</td><td class="c no-hit">上位になし</td><td class="c no-hit">名前なし</td></tr>
   </table>
+  <p class="sub-h" style="margin-top:-36px;margin-bottom:48px">Googleマップでは、上位に他のジムの広告が並んでいました</p>
 
   <h2>項目別チェック</h2>
   <div class="legend"><span><span class="mk a">◎</span>できている</span><span><span class="mk b">○</span>一部できている</span><span><span class="mk c">△</span>伸びしろ</span><span><span class="mk d">—</span>未計測</span></div>
   <div class="chk">
     <div class="row"><span class="mk b">○</span><div class="k">SEO</div><div class="v">トップは地域名入りのタイトル。はじめての方向けページは地域名なし・画像説明が空欄</div></div>
-    <div class="row"><span class="mk b">○</span><div class="k">MEO</div><div class="v">Googleマップに登録済みで、サイトからリンクあり。表記の統一が伸びしろ</div></div>
+    <div class="row"><span class="mk c">△</span><div class="k">MEO</div><div class="v">Googleマップに登録済み。地図検索では上位に出てこないため、表記の統一と口コミ・情報の充実が伸びしろ</div></div>
     <div class="row"><span class="mk c">△</span><div class="k">AIO</div><div class="v">AIの回答に店名が出てこない。店舗情報をAIが読み取れる形（構造化データ）で未設定</div></div>
     <div class="row"><span class="mk c">△</span><div class="k">基本情報</div><div class="v">店名の表記が複数、営業時間が掲載先で異なる</div></div>
     <div class="row"><span class="mk c">△</span><div class="k">スマホ</div><div class="v">固定メニューに「予約」がない</div></div>
@@ -204,7 +206,7 @@
     <div class="row"><span class="mk d">—</span><div class="k">表示速度</div><div class="v">未計測。大きな画像・予約カレンダー2つ・動画を読み込む構成</div></div>
   </div>
 
-  <p class="note">※検索結果は地域・端末・時期によって変わるため参考値です。公式LINEは友だち追加後の表示で確認（9月27日）。</p>
+  <p class="note">※検索結果は地域・端末・時期によって変わるため参考値です（—は未確認）。公式LINEは友だち追加後の表示で確認（9月27日）。</p>
 </section>
 
 <!-- ===== 4枚目 ===== -->
