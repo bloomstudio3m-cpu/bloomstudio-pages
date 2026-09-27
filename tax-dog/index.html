@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Final Receipt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=block" rel="stylesheet">
+<style>
+  :root{--bg:#0c0c0c;--fg:#ECE8DF;--mute:#8b877f;--acc:#FF4A1C}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:"IBM Plex Mono",monospace}
+  #stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;box-sizing:border-box}
+  canvas{display:block;width:min(100%,calc((100vh - 96px)*16/9));height:auto;aspect-ratio:16/9;background:#ECE8DF}
+  .bar{width:min(100%,calc((100vh - 96px)*16/9));display:flex;align-items:center;gap:14px;font-size:12px;letter-spacing:.08em}
+  button{background:none;border:1px solid #3a3a3a;color:var(--fg);font:inherit;padding:6px 12px;cursor:pointer;min-width:72px}
+  button:hover{border-color:var(--fg)}
+  input[type=range]{flex:1;accent-color:var(--acc)}
+  #tc{min-width:92px;text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+  body.render .bar{display:none}
+  body.render #stage{padding:0}
+  body.render canvas{width:1920px}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:12px;letter-spacing:.2em}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="bar">
+    <button id="play">PAUSE</button>
+    <input id="scrub" type="range" min="0" max="15" step="0.001" value="0">
+    <span id="tc">00:00:00</span>
+  </div>
+</div>
+<div id="loading">LOADING…</div>
+<script>
+/* =====================================================================
+   THE FINAL RECEIPT — 確定申告する犬
+   15s / 1920x1080 / every frame is a pure function of t (seconds)
+   ===================================================================== */
+const W = 1920, H = 1080, DUR = 15;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+
+const C = {
+  paper: '#ECE8DF', paper2: '#E2DDD1', ink: '#141414', ink2: '#2A2A2A',
+  red: '#FF4A1C', blue: '#2B4CFF', lime: '#C8FF2E', white: '#FBFAF6',
+  fur: '#D18E4E', furL: '#DE9F60', furD: '#A9682F', cream: '#F5EBDD', earIn: '#F0D4B4',
+  grey: '#B7B1A5', dark: '#141414',
+};
+const JP = '"Noto Sans JP"', LAT = 'Inter', MONO = '"IBM Plex Mono"';
+const DESK = 230;
+
+/* ---------- math ---------- */
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const PI = Math.PI, TAU = PI * 2;
+const E = {
+  outExpo: x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x),
+  inExpo: x => x <= 0 ? 0 : Math.pow(2, 10 * x - 10),
+  inOutExpo: x => x <= 0 ? 0 : x >= 1 ? 1 : x < .5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2,
+  outCubic: x => 1 - Math.pow(1 - x, 3),
+  inCubic: x => x * x * x,
+  inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  outQuint: x => 1 - Math.pow(1 - x, 5),
+  inOutQuint: x => x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2,
+  inOutSine: x => -(Math.cos(PI * x) - 1) / 2,
+  outBack: (x, s = 1.70158) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2),
+  inBack: (x, s = 1.70158) => (s + 1) * x * x * x - s * x * x,
+};
+const spring = (dt, f = 4, z = .35) => {
+  if (dt <= 0) return 0;
+  const w = TAU * f;
+  return 1 - Math.exp(-z * w * dt) * Math.cos(w * Math.sqrt(1 - z * z) * dt);
+};
+const wobble = (dt, f = 5, z = .25) => dt <= 0 ? 0 : Math.exp(-z * TAU * f * dt) * Math.sin(TAU * f * dt);
+function rng(seed) {
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const yen = n => '¥' + Math.round(n).toLocaleString('en-US');
+
+/* ---------- timeline ---------- */
+const ITEMS = [
+  [0, 'ロゴ制作 報酬', 88000], [1, 'ドッグフード', 6480], [1, 'トリミング', 8800],
+  [0, '撮影モデル料', 30000], [2, '骨（高級）', 12000], [1, 'おやつ（業務用）', 2980],
+  [0, 'SNS案件', 55000], [2, 'ボール ×12', 3600], [1, 'リード新調', 4200],
+  [1, 'ペット保険', 3920], [0, '散歩代行', 3000], [2, 'ふわふわ枕', 8900],
+  [1, '肉球クリーム', 1650], [2, '謎の領収書', 0], [2, '？？？', 0],
+];
+const PREFILL = [[1, 'シャンプー', 2400], [0, '肖像使用料', 20000], [1, '爪切り', 1280]];
+// accelerating beats = speed ramp into the hard stop at 7.0
+const BEATS = [3.25, 3.72, 4.15, 4.54, 4.9, 5.22, 5.5, 5.75, 5.97, 6.17, 6.35, 6.51, 6.65, 6.78, 6.9];
+const CAT_JP = ['売上', '経費', '？？？'];
+const CAT_EN = ['REVENUE', 'EXPENSE', 'UNKNOWN'];
+const CAT_BG = [C.blue, C.red, C.ink];
+const CAT_FG = [C.white, C.white, C.lime];
+const beatIndex = t => { let k = -1; for (let i = 0; i < BEATS.length; i++) if (t >= BEATS[i]) k = i; return k; };
+const T_FREEZE = 7.0, T_SHUT = 7.25, T_DARK = 7.6, T_RESTART = 11.0, T_CONV = 11.55, T_TITLE = 12.85;
+
+/* ---------- camera ---------- */
+let CAM = { x: 0, y: 0, z: 1, sx: 0, sy: 0 };
+function camera(t) {
+  let x = 0, y = 0, z = 1, sx = 0, sy = 0;
+  if (t < T_FREEZE) {
+    z = lerp(1.12, 1.0, E.outCubic(seg(t, 0, 2.6))) + 0.06 * E.inCubic(seg(t, 3, 7));
+    x = Math.sin(t * .7) * 12; y = Math.cos(t * .55) * 8;
+    sy += wobble(t - .62, 7, .3) * 12;
+    for (const b of BEATS) if (t >= b) { sx += wobble(t - b, 11, .35) * 5; sy += wobble(t - b, 9, .3) * 4; }
+  } else if (t < T_DARK) {
+    const f = camera(T_FREEZE - 1e-4); return { ...f, sx: 0, sy: 0 };
+  } else if (t < T_RESTART) {
+    const z0 = camera(T_FREEZE - 1e-4).z;
+    z = lerp(z0, 1.15, E.inOutSine(seg(t, 7.6, 9.3))) + .1 * E.outExpo(seg(t, 9.35, 10.3)) + .015 * seg(t, 10.3, 11);
+    x = 330 * E.inOutQuint(seg(t, 9.3, 10.05));
+    y = -24 * E.inOutSine(seg(t, 7.6, 9.3));
+  } else if (t < T_TITLE) {
+    const k = E.outExpo(seg(t, 11, 11.45));
+    z = lerp(1.265, 1.0, k) - .07 * E.inCubic(seg(t, 11.55, 12.85));
+    x = lerp(330, 0, k) + Math.sin(t * .7) * 8; y = lerp(-24, 0, k);
+    sx += wobble(t - 11, 12, .3) * 16; sy += wobble(t - 11, 10, .3) * 14;
+  } else {
+    z = lerp(1.07, 1.0, E.outCubic(seg(t, 12.85, 13.7))) + .025 * E.inOutSine(seg(t, 13.7, 15));
+    sx += wobble(t - 12.85, 12, .3) * 18; sy += wobble(t - 12.85, 10, .3) * 16;
+    sx += wobble(t - 13.97, 12, .35) * 6; sy += wobble(t - 13.97, 14, .35) * 10;
+  }
+  return { x, y, z, sx, sy };
+}
+function L(d, fn) {
+  ctx.save();
+  const z = 1 + (CAM.z - 1) * d;
+  ctx.translate(W / 2 + CAM.sx * d, H / 2 + CAM.sy * d);
+  ctx.scale(z, z);
+  ctx.translate(-CAM.x * d, -CAM.y * d);
+  fn();
+  ctx.restore();
+}
+const toScreen = (wx, wy, d = 1) => {
+  const z = 1 + (CAM.z - 1) * d;
+  return [W / 2 + CAM.sx * d + z * (wx - CAM.x * d), H / 2 + CAM.sy * d + z * (wy - CAM.y * d)];
+};
+
+/* ---------- drawing helpers ---------- */
+function font(w, s, f) { ctx.font = `${w} ${s}px ${f}`; }
+function text(s, x, y, { w = 400, size = 16, f = MONO, col = C.ink, align = 'left', base = 'alphabetic', track = 0, alpha = 1 } = {}) {
+  ctx.save();
+  font(w, size, f); ctx.fillStyle = col; ctx.textAlign = align; ctx.textBaseline = base;
+  ctx.letterSpacing = track + 'px'; ctx.globalAlpha *= alpha;
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function ell(x, y, rx, ry, rot = 0) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(.01, rx), Math.max(.01, ry), rot, 0, TAU); }
+function line(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+// mask-rise text reveal (each char rises out of its own box)
+function riseText(str, x, y, size, p, { w = 900, f = JP, col = C.ink, stagger = .08, dur = .55, colorFn = null, track = 0 } = {}) {
+  font(w, size, f);
+  ctx.save(); ctx.letterSpacing = track + 'px';
+  let cx = x;
+  const chars = [...str];
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const cw = ctx.measureText(ch).width + track;
+    const q = E.outExpo(clamp((p - i * stagger) / dur));
+    if (q > 0) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(cx - 4, y - size * 1.05, cw + 8, size * 1.35); ctx.clip();
+      ctx.fillStyle = colorFn ? colorFn(i, ch) : col;
+      ctx.textBaseline = 'alphabetic';
+      ctx.translate(cx, y + (1 - q) * size * 1.2);
+      ctx.rotate((1 - q) * .12);
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+    }
+    cx += cw;
+  }
+  ctx.restore();
+  return cx - x;
+}
+
+/* ---------- receipt art (pre-rendered) ---------- */
+function zigPath(c, w, h, z = 7, top = true, bottom = true) {
+  const n = Math.max(3, Math.round(w / (z * 2)));
+  const x0 = -w / 2, y0 = -h / 2, dx = w / n;
+  c.beginPath(); c.moveTo(x0, y0);
+  for (let i = 0; i < n; i++) { if (top) c.lineTo(x0 + (i + .5) * dx, y0 + z); c.lineTo(x0 + (i + 1) * dx, y0); }
+  c.lineTo(-x0, -y0);
+  for (let i = n - 1; i >= 0; i--) { if (bottom) c.lineTo(x0 + (i + .5) * dx, -y0 - z); c.lineTo(x0 + i * dx, -y0); }
+  c.closePath();
+}
+function makeReceiptImg(w, h, seed, big) {
+  const pad = 30, cc = document.createElement('canvas');
+  cc.width = Math.ceil(w + pad * 2); cc.height = Math.ceil(h + pad * 2);
+  const c = cc.getContext('2d'), r = rng(seed);
+  c.translate(cc.width / 2, cc.height / 2);
+  c.save(); c.translate(5, 9); zigPath(c, w, h, w * .03 + 2); c.fillStyle = 'rgba(20,20,20,.13)'; c.fill(); c.restore();
+  zigPath(c, w, h, w * .03 + 2); c.fillStyle = C.white; c.fill();
+  const u = w / 120, x0 = -w / 2 + 12 * u, x1 = w / 2 - 12 * u;
+  let y = -h / 2 + 18 * u;
+  const hdr = r();
+  if (hdr < .45) {
+    c.fillStyle = C.ink; c.font = `600 ${11 * u}px ${MONO}`; c.textAlign = 'center';
+    c.fillText(['RECEIPT', '領収書', 'レシート', 'INVOICE'][Math.floor(r() * 4)], 0, y + 8 * u); y += 18 * u;
+  } else { c.fillStyle = C.ink; c.fillRect(-18 * u, y, 36 * u, 6 * u); y += 14 * u; }
+  c.fillStyle = C.grey; c.fillRect(-26 * u, y, 52 * u, 2.5 * u); y += 12 * u;
+  c.setLineDash([3 * u, 3 * u]); c.strokeStyle = C.grey; c.lineWidth = u; c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke(); c.setLineDash([]); y += 10 * u;
+  const rows = Math.floor((h / u - 110) / 11);
+  for (let i = 0; i < rows; i++) {
+    c.fillStyle = C.grey; c.fillRect(x0, y, (22 + r() * 34) * u, 3 * u);
+    const rw = (12 + r() * 14) * u; c.fillRect(x1 - rw, y, rw, 3 * u); y += 11 * u;
+  }
+  y += 4 * u; c.fillStyle = C.ink; c.fillRect(x0, y, 30 * u, 5 * u); c.fillRect(x1 - 34 * u, y, 34 * u, 5 * u); y += 16 * u;
+  // barcode
+  let bx = x0; while (bx < x1) { const bw = (r() < .5 ? 1 : 2.2) * u; c.fillRect(bx, y, bw, 16 * u); bx += bw + (1 + r() * 2) * u; }
+  if (r() < .28) { // stamp
+    c.save(); c.translate((r() - .5) * 40 * u, (r() - .5) * 60 * u); c.rotate(-.3 + r() * .2);
+    const col = r() < .6 ? C.red : C.blue;
+    c.strokeStyle = col; c.globalAlpha = .75; c.lineWidth = 2 * u; c.beginPath(); c.arc(0, 0, 17 * u, 0, TAU); c.stroke();
+    c.fillStyle = col; c.font = `900 ${12 * u}px ${JP}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(['済', '領収', '支払'][Math.floor(r() * 3)], 0, 1);
+    c.restore();
+  }
+  return cc;
+}
+
+/* ---------- entities ---------- */
+const RC = [];
+{
+  const r = rng(11);
+  for (let i = 0; i < 48; i++) {
+    const layer = i < 14 ? 0 : i < 40 ? 1 : 2;
+    const depth = [.55, .85, 1.35][layer];
+    const sc = [.62, .95, 2.0][layer] * (.85 + r() * .3);
+    const w = 120 * sc, h = (170 + r() * 110) * sc;
+    const start = layer === 2 ? .1 + (i - 40) * .3 + r() * .1 : .04 + Math.pow(r(), 1.5) * 2.3;
+    const ang = r() * TAU;
+    const from = { x: Math.cos(ang) * 1500, y: Math.sin(ang) * 950 };
+    let tx, ty;
+    do { tx = (r() * 2 - 1) * 900; ty = (r() * 2 - 1) * 470; } while (layer > 0 && Math.abs(tx) < 300 && ty > -440 && ty < 300);
+    RC.push({
+      i, k: i, layer, depth, w, h, start, dur: .45 + r() * .35, from, to: { x: tx, y: ty },
+      rot0: (r() * 2 - 1) * 3.5, rot1: (r() * 2 - 1) * .45, spin: (r() * 2 - 1) * 5, fl: r() * TAU,
+      bang: r() * TAU, brad: 500 + r() * 800, seed: (r() * 1e9) | 0, img: null,
+    });
+  }
+  // belts for phase B
+  const belts = [
+    { y: -410, v: 70, tilt: .0, layer: 0 }, { y: 150, v: -55, tilt: 0, layer: 0 },
+    { y: -330, v: -95, tilt: 0, layer: 1 }, { y: 420, v: 110, tilt: 0, layer: 1 },
+  ];
+  for (const b of belts) {
+    const members = RC.filter((rc, idx) => rc.layer === b.layer && (idx % 2 === (belts.indexOf(b) % 2)));
+    b.spacing = 2600 / members.length;
+    members.forEach((rc, s) => { rc.belt = b; rc.slot = s; });
+  }
+}
+function rcA(rc, t) {
+  if (rc.layer === 2) {
+    const p = seg(t, rc.start, rc.start + .5); if (p <= 0 || p >= 1) return null;
+    const e = E.inOutSine(p);
+    return { x: lerp(rc.from.x, -rc.from.x, e), y: lerp(rc.from.y * .8, -rc.from.y * .5, e), r: rc.rot0 + e * rc.spin * .4, s: 1, a: 1 };
+  }
+  const p = seg(t, rc.start, rc.start + rc.dur); if (p <= 0) return null;
+  const e = E.outExpo(p), fl = t - rc.start;
+  return {
+    x: lerp(rc.from.x, rc.to.x, e) + Math.sin(fl * 1.3 + rc.fl) * 9 * e,
+    y: lerp(rc.from.y, rc.to.y, e) + Math.cos(fl * 1.1 + rc.fl) * 7 * e,
+    r: lerp(rc.rot0, rc.rot1, e) + Math.sin(fl * .9 + rc.fl) * .05, s: 1, a: 1,
+  };
+}
+function beltPos(rc, t) {
+  const b = rc.belt, span = 2600;
+  let x = (rc.slot * b.spacing + b.v * (t - 3)) % span; if (x < 0) x += span;
+  return { x: x - span / 2, y: b.y + Math.sin(t * 1.6 + rc.fl) * 5, r: Math.sin(t * 1.2 + rc.fl) * .03, s: 1, a: 1 };
+}
+function convergeState(o, t, ySq = .62) {
+  const ang = o.bang, R = o.brad;
+  if (t < T_CONV) {
+    const e = E.outExpo(seg(t, T_RESTART, T_RESTART + .5));
+    return { x: Math.cos(ang) * R * e, y: Math.sin(ang) * R * e * ySq, r: (o.rot0 || 0) * e * 1.5 + Math.sin(t * 3 + ang) * .1, s: .25 + .75 * e, a: 1 };
+  }
+  const c = E.inExpo(seg(t, T_CONV + (o.k || 0) * .004, 12.82));
+  const a2 = ang + c * 2.4, rr = R * (1 - c);
+  return { x: Math.cos(a2) * rr, y: Math.sin(a2) * rr * ySq, r: (o.rot0 || 0) * 1.5 + c * 7, s: (1 - c * .9), a: 1 - seg(c, .9, 1) };
+}
+function receiptState(rc, t) {
+  if (t < 3) return rcA(rc, t);
+  if (t < T_RESTART) {
+    if (rc.layer === 2 || !rc.belt) return null;
+    const a = rcA(rc, 3); if (!a) return null;
+    const q = E.inOutQuint(seg(t, 3 + rc.k * .01, 3.62 + rc.k * .01));
+    const b = beltPos(rc, t);
+    return { x: lerp(a.x, b.x, q), y: lerp(a.y, b.y, q), r: lerp(a.r, b.r, q), s: 1, a: 1 };
+  }
+  if (t >= T_TITLE) return null;
+  return convergeState(rc, t);
+}
+function drawReceipts(t, layer, blurPx = 0) {
+  const d = [.55, .85, 1.35][layer];
+  L(d, () => {
+    for (const rc of RC) {
+      if (rc.layer !== layer) continue;
+      const st = receiptState(rc, t); if (!st) continue;
+      // motion blur via temporal ghosts
+      const prev = receiptState(rc, t - 1 / 60);
+      const sp = prev ? Math.hypot(st.x - prev.x, st.y - prev.y) : 0;
+      const ghosts = sp > 14 ? 5 : 0;
+      for (let g = ghosts; g >= 0; g--) {
+        const s2 = g ? receiptState(rc, t - g * (1 / 240)) : st; if (!s2) continue;
+        ctx.save();
+        const dim = t >= 3 && t < T_RESTART ? lerp(1, layer === 0 ? .5 : .7, seg(t, 3, 3.6)) : 1;
+        ctx.globalAlpha = (g ? .16 : 1) * s2.a * (layer === 0 ? .5 : 1) * dim;
+        if (blurPx) ctx.filter = `blur(${blurPx}px)`;
+        ctx.translate(s2.x, s2.y); ctx.rotate(s2.r); ctx.scale(s2.s, s2.s);
+        ctx.drawImage(rc.img, -rc.img.width / 2, -rc.img.height / 2);
+        ctx.restore();
+      }
+    }
+  });
+}
+
+/* glyph particles */
+const GL = [];
+{
+  const r = rng(29), chars = '¥¥¥¥%+−×÷=0123456789¥';
+  for (let i = 0; i < 64; i++) {
+    const ch = chars[Math.floor(r() * chars.length)];
+    GL.push({
+      ch, k: i, size: 18 + Math.pow(r(), 2) * 90, col: [C.ink, C.ink, C.red, C.blue][Math.floor(r() * 4)],
+      depth: .6 + r() * .7, ang: r() * TAU, rad: 260 + r() * 700, t0: 1.0 + r() * .9,
+      rot0: (r() - .5) * .6, bang: r() * TAU, brad: 400 + r() * 700, fl: r() * TAU, w: r() < .5 ? 900 : 400,
+    });
+  }
+}
+function glyphState(g, t) {
+  if (t >= T_TITLE) return null;
+  if (t >= T_RESTART) return convergeState(g, t);
+  if (t < g.t0) return null;
+  const e = E.outExpo(seg(t, g.t0, g.t0 + .8)), fl = t - g.t0;
+  const cx = 0, cy = -60;
+  return {
+    x: cx + Math.cos(g.ang) * g.rad * e + Math.sin(fl * .8 + g.fl) * 14,
+    y: cy + Math.sin(g.ang) * g.rad * e * .62 - fl * 10 * g.depth,
+    r: g.rot0 * (1 - e) * 3 + Math.sin(fl + g.fl) * .08, s: .4 + .6 * e,
+    a: lerp(1, .32, seg(t, 2.7, 3.4)),
+  };
+}
+function drawGlyphs(t, front) {
+  for (const g of GL) {
+    if ((g.depth > 1) !== front) continue;
+    const st = glyphState(g, t); if (!st) continue;
+    L(g.depth, () => {
+      ctx.save(); ctx.translate(st.x, st.y); ctx.rotate(st.r); ctx.scale(st.s, st.s);
+      ctx.globalAlpha = st.a;
+      text(g.ch, 0, 0, { w: g.w, size: g.size, f: g.ch === '¥' || /\d/.test(g.ch) ? LAT : MONO, col: g.col, align: 'center', base: 'middle' });
+      ctx.restore();
+    });
+  }
+}
+
+/* ---------- dog ---------- */
+function dogState(t) {
+  const s = {
+    headRot: 0, hx: 0, hy: 0, px: 0, py: 0, blink: 0, earL: 0, earR: 0,
+    pawL: { x: -94, y: -14 }, pawR: { x: 94, y: -14 }, breathe: Math.sin(t * 2.3) * .012,
+    scale: 1, y: 0, alpha: 1, glint: -1,
+  };
+  if (t < 1.4) s.y = (1 - E.outBack(seg(t, .58, 1.08), 1.3)) * 460;
+  for (const b of [1.95, 4.42, 6.07, 8.8, 10.62, 11.35, 14.1]) { const d = t - b; if (d > 0 && d < .16) s.blink = Math.sin(d / .16 * PI); }
+  s.earL = wobble(t - 1.02, 6, .2) * .28 + wobble(t - 2.35, 8, .3) * .14;
+  s.earR = wobble(t - 1.07, 6, .2) * .28 + wobble(t - 5.1, 8, .3) * .12;
+  if (t > 1.1 && t < 1.5) s.glint = seg(t, 1.12, 1.45);
+  const tb = t >= T_FREEZE && t < T_DARK ? T_FREEZE : t;
+  if (tb >= 2.4 && tb < T_DARK) {
+    const k = beatIndex(tb);
+    const dirOf = i => i < 0 ? [0, 0] : ITEMS[i][0] === 0 ? [-1, 0] : ITEMS[i][0] === 1 ? [1, 0] : [0, -1];
+    const [dx0, dy0] = dirOf(k - 1), [dx1, dy1] = dirOf(k);
+    const q = k < 0 ? 0 : E.outExpo(seg(tb, BEATS[k], BEATS[k] + .22));
+    const dx = lerp(dx0, dx1, q), dy = lerp(dy0, dy1, q);
+    s.px = dx; s.py = dy * .8 + (k < 0 ? .6 : 0); s.hx = dx * 10; s.hy = dy * 8; s.headRot = dx * .06;
+    if (k >= 0) {
+      const d = tb - BEATS[k], sw = Math.sin(PI * seg(d, 0, .26));
+      const cat = ITEMS[k][0];
+      if (cat === 0) { s.pawL.x -= sw * 70; s.pawL.y -= sw * 40; }
+      else if (cat === 1) { s.pawR.x += sw * 70; s.pawR.y -= sw * 40; }
+      else { s.pawL.y -= sw * 70; s.pawR.y -= sw * 70; s.pawL.x += sw * 20; s.pawR.x -= sw * 20; }
+      s.headRot += wobble(d, 6, .35) * .05 * (dx1 || 1);
+      s.earL += wobble(d, 7, .3) * .12; s.earR += wobble(d - .03, 7, .3) * .12;
+    }
+  }
+  if (t >= T_DARK && t < T_RESTART) {
+    const f = E.inOutSine(seg(t, 7.8, 8.5));
+    s.py = lerp(-1, 1, f); s.hy = lerp(-6, 10, f); s.px = 0; s.hx = 0; s.headRot = 0;
+    const press = E.outBack(seg(t, 8.5, 8.75));
+    s.pawL.x = -124 + press * 16; s.pawR.x = 124 - press * 16;
+    s.pawL.y = s.pawR.y = -12 - wobble(t - 8.5, 5, .3) * 6;
+    const look = E.inOutCubic(seg(t, 9.05, 9.3));
+    s.py = lerp(s.py, .15, look); s.px = lerp(0, .35, look); s.hy = lerp(s.hy, 2, look);
+    s.headRot = -.29 * spring(t - 9.3, 2.1, .38);
+    s.earL = wobble(t - 9.3, 5, .22) * .35 + wobble(t - 8.5, 7, .3) * .1;
+    s.earR = -wobble(t - 9.36, 5, .22) * .3;
+  }
+  if (t >= T_RESTART) {
+    s.headRot = -.29 * (1 - spring(t - 11, 3, .35));
+    s.earL = wobble(t - 11, 7, .25) * .4; s.earR = wobble(t - 11.03, 7, .25) * .4;
+    if (t < 11.5) s.glint = seg(t, 11.12, 11.45);
+    const c = seg(t, 12.25, 12.8);
+    s.scale = 1 - E.inBack(c, 2.2); s.alpha = c >= 1 ? 0 : 1;
+    s.headRot += c * .8;
+  }
+  return s;
+}
+function drawDog(s, mid) {
+  if (s.alpha <= 0 || s.scale <= .001) return;
+  ctx.save();
+  ctx.translate(0, s.y); ctx.scale(s.scale, s.scale);
+  // floor shadow
+  ctx.fillStyle = 'rgba(20,20,20,.14)'; ell(0, 4, 200, 16); ctx.fill();
+  // torso
+  ctx.save(); ctx.scale(1 + s.breathe * .5, 1 + s.breathe);
+  ctx.beginPath(); ctx.moveTo(-136, 6); ctx.bezierCurveTo(-140, -80, -118, -152, -70, -180);
+  ctx.lineTo(70, -180); ctx.bezierCurveTo(118, -152, 140, -80, 136, 6); ctx.closePath();
+  let g = ctx.createLinearGradient(-140, 0, 140, 0); g.addColorStop(0, C.furL); g.addColorStop(.55, C.fur); g.addColorStop(1, C.furD);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-64, -176); ctx.quadraticCurveTo(-34, -40, 0, -18); ctx.quadraticCurveTo(34, -40, 64, -176); ctx.closePath();
+  ctx.fillStyle = C.cream; ctx.fill();
+  ctx.restore();
+  // head
+  ctx.save();
+  ctx.translate(s.hx, -176 + s.hy); ctx.rotate(s.headRot); ctx.translate(0, -96);
+  const ear = (side, a) => {
+    ctx.save(); ctx.scale(side, 1); ctx.translate(72, -72); ctx.rotate(a);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 18; ctx.fillStyle = C.fur; ctx.strokeStyle = C.fur;
+    ctx.beginPath(); ctx.moveTo(-42, -10); ctx.lineTo(46, 28); ctx.lineTo(20, -114); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.furD; ctx.globalAlpha = .35; ctx.beginPath(); ctx.moveTo(8, 12); ctx.lineTo(46, 28); ctx.lineTo(20, -114); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = C.earIn;
+    ctx.beginPath(); ctx.moveTo(-18, -4); ctx.lineTo(26, 14); ctx.lineTo(15, -76); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  };
+  ear(-1, -s.earL); ear(1, s.earR);
+  const headPath = () => {
+    ctx.beginPath(); ctx.moveTo(0, -100);
+    ctx.bezierCurveTo(72, -100, 116, -70, 123, -10); ctx.bezierCurveTo(129, 42, 96, 96, 0, 100);
+    ctx.bezierCurveTo(-96, 96, -129, 42, -123, -10); ctx.bezierCurveTo(-116, -70, -72, -100, 0, -100); ctx.closePath();
+  };
+  headPath();
+  g = ctx.createRadialGradient(-40, -55, 10, -10, -10, 190); g.addColorStop(0, C.furL); g.addColorStop(.6, C.fur); g.addColorStop(1, C.furD);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); headPath(); ctx.clip();
+  ctx.beginPath(); ctx.moveTo(-150, 22); ctx.bezierCurveTo(-96, -4, -52, 6, -26, -22); ctx.quadraticCurveTo(0, -46, 26, -22);
+  ctx.bezierCurveTo(52, 6, 96, -4, 150, 22); ctx.lineTo(150, 150); ctx.lineTo(-150, 150); ctx.closePath();
+  ctx.fillStyle = C.cream; ctx.fill();
+  ctx.fillStyle = 'rgba(120,70,30,.10)'; ctx.fillRect(40, -120, 120, 260);
+  ctx.restore();
+  // brows
+  ctx.fillStyle = C.cream; ell(-46, -56, 12, 7.5, .15); ctx.fill(); ell(46, -56, 12, 7.5, -.15); ctx.fill();
+  // eyes
+  for (const side of [-1, 1]) {
+    ctx.save(); ctx.translate(side * 48 + s.px * 5, -18 + s.py * 4); ctx.scale(1, 1 - s.blink * .92);
+    ctx.fillStyle = C.ink; ell(0, 0, 12.5, 11.5); ctx.fill();
+    ctx.fillStyle = C.white; ell(-4, -4, 3.4, 3.4); ctx.fill();
+    ctx.restore();
+  }
+  // glasses
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5;
+  for (const side of [-1, 1]) {
+    ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.beginPath(); ctx.arc(side * 48, -17, 28, 0, TAU); ctx.fill(); ctx.stroke();
+    if (s.glint >= 0) {
+      ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 9;
+      const gx = lerp(-60, 60, s.glint); line(side * 48 + gx - 20, -50, side * 48 + gx + 20, 16);
+    }
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.moveTo(-20, -22); ctx.quadraticCurveTo(0, -32, 20, -22); ctx.stroke();
+  line(-76, -22, -118, -30); line(76, -22, 118, -30);
+  // nose + mouth
+  ctx.fillStyle = C.ink;
+  ctx.beginPath(); ctx.moveTo(-17, 20); ctx.quadraticCurveTo(0, 13, 17, 20); ctx.quadraticCurveTo(19, 27, 6, 34); ctx.quadraticCurveTo(0, 38, -6, 34); ctx.quadraticCurveTo(-19, 27, -17, 20); ctx.fill();
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, 36); ctx.lineTo(0, 46); ctx.quadraticCurveTo(-8, 55, -18, 51); ctx.moveTo(0, 46); ctx.quadraticCurveTo(8, 55, 18, 51); ctx.stroke();
+  ctx.restore();
+  // legs, then whatever the dog is holding, then paws on top
+  for (const [side, p] of [[-1, s.pawL], [1, s.pawR]]) {
+    ctx.strokeStyle = side < 0 ? C.fur : C.furD; ctx.lineWidth = 50; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(side * 70, -128); ctx.quadraticCurveTo(side * 84, -60, p.x, p.y - 10); ctx.stroke();
+  }
+  mid && mid();
+  for (const [side, p] of [[-1, s.pawL], [1, s.pawR]]) {
+    ctx.fillStyle = C.cream; ell(p.x, p.y, 36, 21); ctx.fill();
+    ctx.strokeStyle = 'rgba(20,20,20,.25)'; ctx.lineWidth = 2.5;
+    for (const o of [-11, 0, 11]) line(p.x + o, p.y + 6, p.x + o, p.y + 16);
+  }
+  ctx.restore();
+}
+
+/* ---------- icons ---------- */
+function iconCalc(t) {
+  ctx.fillStyle = C.ink; rrect(-60, -80, 120, 160, 14); ctx.fill();
+  ctx.fillStyle = C.lime; rrect(-46, -66, 92, 34, 5); ctx.fill();
+  text(String(Math.floor(t * 4321) % 99999).padStart(5, ' '), 40, -41, { w: 600, size: 22, col: C.ink, align: 'right' });
+  const hot = Math.floor(t * 12) % 16;
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+    ctx.fillStyle = r * 4 + c === hot ? C.red : c === 3 ? C.grey : C.paper; rrect(-46 + c * 24, -22 + r * 24, 20, 20, 4); ctx.fill();
+  }
+}
+function iconLedger(t) {
+  ctx.fillStyle = C.ink; rrect(-86, -58, 172, 118, 8); ctx.fill();
+  ctx.fillStyle = C.white; rrect(-80, -54, 78, 106, 3); ctx.fill(); rrect(2, -54, 78, 106, 3); ctx.fill();
+  ctx.fillStyle = C.grey;
+  for (let i = 0; i < 6; i++) { ctx.fillRect(-72, -40 + i * 15, 52 + (i % 2) * 8, 3); ctx.fillRect(10, -40 + i * 15, 40 + ((i + 1) % 3) * 10, 3); }
+  ctx.fillStyle = C.red; ctx.beginPath(); ctx.moveTo(48, -58); ctx.lineTo(48, 70); ctx.lineTo(56, 62); ctx.lineTo(64, 70); ctx.lineTo(64, -58); ctx.fill();
+}
+function iconCoin(t) {
+  ctx.save(); ctx.scale(Math.cos(t * 5), 1);
+  ctx.fillStyle = C.red; ctx.beginPath(); ctx.arc(0, 0, 62, 0, TAU); ctx.fill();
+  ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 50, 0, TAU); ctx.stroke();
+  text('¥', 0, 4, { w: 900, size: 70, f: LAT, col: C.white, align: 'center', base: 'middle' });
+  ctx.restore();
+}
+function iconHanko(t) {
+  ctx.fillStyle = C.ink; rrect(-26, -96, 52, 70, 10); ctx.fill();
+  ctx.fillStyle = C.ink2; rrect(-34, -30, 68, 24, 6); ctx.fill();
+  ctx.strokeStyle = C.red; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 36, 38, 0, TAU); ctx.stroke();
+  text('犬', 0, 38, { w: 900, size: 40, f: JP, col: C.red, align: 'center', base: 'middle' });
+}
+const ICONS = [
+  { fn: iconCalc, a: -2.5, t0: 1.15, to: [150, 238, .26] },
+  { fn: iconLedger, a: -.55, t0: 1.22, to: [1396, 526, .2] },
+  { fn: iconCoin, a: .75, t0: 1.3, to: [640, 972, .28] },
+  { fn: iconHanko, a: 2.35, t0: 1.38, to: [1772, 248, .26] },
+];
+function iconPose(ic, t) {
+  const cx = W / 2, cy = H / 2 - 60;
+  const e = E.outBack(seg(t, ic.t0, ic.t0 + .45), 2);
+  const orbit = ic.a + (t - 1.1) * .35;
+  const p = [cx + Math.cos(orbit) * 460, cy + Math.sin(orbit) * 300, e];
+  const m = E.inOutExpo(seg(t, 2.72, 3.22));
+  return [lerp(p[0], ic.to[0], m), lerp(p[1], ic.to[1], m), lerp(p[2], ic.to[2], m), (1 - m) * Math.sin(t * 2 + ic.a) * .12];
+}
+function drawIcons(t) {
+  if (t < 1.1) return;
+  for (const ic of ICONS) {
+    const [x, y, s, r] = iconPose(ic, t); if (s <= .001) continue;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.scale(s, s); ic.fn(t); ctx.restore();
+  }
+}
+
+/* ---------- rings around dog ---------- */
+function drawRings(t, collapse = 0) {
+  const tb = t >= T_FREEZE && t < T_DARK ? T_FREEZE : t;
+  const build = E.outExpo(seg(tb, .9, 1.9));
+  if (build <= 0) return;
+  let pulse = 0;
+  for (const b of BEATS) if (tb >= b) pulse += wobble(tb - b, 5, .3) * .03;
+  const spd = 1 + 3 * E.inCubic(seg(tb, 3, 7)) + (t > 11 ? 6 : 0);
+  L(.9, () => {
+    ctx.save(); ctx.translate(0, -60);
+    const sc = (1 + pulse) * (1 - collapse); ctx.scale(sc, sc); ctx.rotate(collapse * 3);
+    // dashed orbit
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.setLineDash([2, 10]);
+    ctx.lineDashOffset = -tb * 40 * spd;
+    ctx.beginPath(); ctx.arc(0, 0, 330, -PI / 2, -PI / 2 + TAU * build); ctx.stroke(); ctx.setLineDash([]);
+    // tick ring
+    const n = 144;
+    for (let i = 0; i < n * build; i++) {
+      const a = i / n * TAU + tb * .08 * spd;
+      const wave = .5 + .5 * Math.sin(i * .35 - tb * 6 * spd);
+      const len = i % 12 === 0 ? 22 : 6 + wave * 8;
+      ctx.strokeStyle = i % 12 === 0 ? C.red : C.ink; ctx.lineWidth = i % 12 === 0 ? 2.5 : 1.2;
+      line(Math.cos(a) * 390, Math.sin(a) * 390, Math.cos(a) * (390 + len), Math.sin(a) * (390 + len));
+    }
+    // arcs
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = C.red; ctx.lineWidth = 6;
+    const a0 = -tb * 1.1 * spd; ctx.beginPath(); ctx.arc(0, 0, 356, a0, a0 + 1.2 * build); ctx.stroke();
+    ctx.strokeStyle = C.blue; ctx.lineWidth = 3;
+    const a1 = tb * .8 * spd; ctx.beginPath(); ctx.arc(0, 0, 368, a1, a1 + .7 * build); ctx.stroke();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, 430, a1 * -.5, a1 * -.5 + 2.4 * build); ctx.stroke();
+    // crosshair markers
+    for (let i = 0; i < 4; i++) {
+      const a = i * PI / 2 + tb * .2;
+      ctx.save(); ctx.rotate(a); ctx.translate(460, 0); ctx.lineWidth = 1.5; ctx.strokeStyle = C.ink;
+      line(-8, 0, 8, 0); line(0, -8, 0, 8); ctx.restore();
+    }
+    ctx.restore();
+  });
+}
+
+/* ---------- panels / HUD data ---------- */
+function totals(t) {
+  let rev = 20000, exp = 3680, pend = 0;
+  BEATS.forEach((b, i) => {
+    const e = E.outExpo(seg(t, b, b + .4)), [cat, , amt] = ITEMS[i];
+    if (cat === 0) rev += amt * e; else if (cat === 1) exp += amt * e; else pend += e;
+  });
+  return { rev, exp, pend };
+}
+const MONTH_BASE = (() => { const r = rng(5); return Array.from({ length: 12 }, () => [.25 + r() * .3, .12 + r() * .2]); })();
+function barValues(t) {
+  const v = MONTH_BASE.map(a => [...a]);
+  BEATS.forEach((b, i) => {
+    const m = (i * 7 + 3) % 12, cat = ITEMS[i][0];
+    const e = spring(t - b, 3.5, .35);
+    if (cat === 0) v[m][0] += .28 * e; else if (cat === 1) v[m][1] += .22 * e;
+    else v.forEach((x, j) => { x[0] += wobble(t - b, 9, .4) * .08 * Math.sin(j * 2.1); });
+  });
+  return v;
+}
+function cardAt(t) {
+  const k = beatIndex(t);
+  if (t >= T_RESTART) { const c = Math.floor((t - 11) / .07) % 3; return { cur: c, prev: (c + 2) % 3, d: ((t - 11) % .07) * 3 }; }
+  return { cur: k < 0 ? -1 : ITEMS[k][0], prev: k < 1 ? -1 : ITEMS[k - 1][0], d: k < 0 ? 9 : t - BEATS[k] };
+}
+function drawCard(t, x, y, w, h, build) {
+  if (build <= 0) return;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w * build, h); ctx.clip();
+  const { cur, prev, d } = cardAt(t);
+  const bgOf = c => c < 0 ? C.paper2 : CAT_BG[c], fgOf = c => c < 0 ? C.ink : CAT_FG[c];
+  const wipe = E.outExpo(seg(d, 0, .16));
+  ctx.fillStyle = bgOf(prev); ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = bgOf(cur); ctx.fillRect(x, y, w * wipe, h);
+  if (cur === 2) { // hatch on unknown
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w * wipe, h); ctx.clip();
+    ctx.strokeStyle = 'rgba(200,255,46,.12)'; ctx.lineWidth = 10;
+    for (let i = -10; i < 30; i++) { const o = i * 34 + (t * 60) % 34; line(x + o, y + h, x + o + h, y); }
+    ctx.restore();
+  }
+  const labelOf = c => c < 0 ? 'READY' : CAT_JP[c];
+  const q = E.outExpo(seg(d, .02, .3));
+  const drawLabel = (c, off) => {
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y + 40, w, h - 60); ctx.clip();
+    const isJP = c >= 0;
+    text(labelOf(c), x + 34, y + h - 44 + off, { w: 900, size: isJP ? (c === 2 ? 118 : 138) : 96, f: isJP ? JP : LAT, col: fgOf(c), track: c === 2 ? -6 : isJP ? 4 : -2 });
+    ctx.restore();
+  };
+  if (q < 1) drawLabel(prev, -q * h);
+  drawLabel(cur, (1 - q) * h);
+  // meta row
+  const fg = fgOf(cur);
+  text('CATEGORY', x + 36, y + 42, { w: 500, size: 14, col: fg, track: 3, alpha: .75 });
+  text(cur < 0 ? '— STANDBY' : `0${cur + 1} / ${CAT_EN[cur]}`, x + w - 34, y + 42, { w: 600, size: 14, col: fg, align: 'right', track: 2 });
+  text('#' + String(Math.max(0, beatIndex(Math.min(t, 7))) + 101).padStart(4, '0'), x + w - 34, y + h - 30, { w: 500, size: 14, col: fg, align: 'right', alpha: .8 });
+  ctx.restore();
+  // tabs under card
+  const ty = y + h + 26, tw = w / 3;
+  for (let i = 0; i < 3; i++) text(CAT_JP[i], x + i * tw + tw / 2, ty + 6, { w: 700, size: 17, f: JP, col: C.ink, align: 'center', alpha: (cur === i ? 1 : .4) * build });
+  ctx.fillStyle = C.ink; ctx.globalAlpha = build * .2; ctx.fillRect(x, ty + 18, w * build, 1); ctx.globalAlpha = 1;
+  if (cur >= 0) {
+    const pi = prev < 0 ? cur : prev, px = lerp(pi, cur, E.outExpo(seg(d, 0, .25)));
+    ctx.fillStyle = cur === 2 ? C.ink : CAT_BG[cur]; ctx.fillRect(x + px * tw + 20, ty + 16, tw - 40, 4);
+  }
+}
+function drawLedger(t, x, y, w, build) {
+  if (build <= 0) return;
+  const ink = C.ink;
+  ctx.save();
+  ctx.globalAlpha = build;
+  text('LEDGER', x + 60, y + 8, { w: 600, size: 15, col: ink, track: 4 });
+  text('帳簿 / 2026', x + 60, y + 30, { w: 700, size: 14, f: JP, col: ink, alpha: .55 });
+  text(String(PREFILL.length + beatIndex(Math.min(t, 7)) + 1).padStart(3, '0') + ' ENTRIES', x + w, y + 8, { w: 500, size: 13, col: ink, align: 'right', alpha: .6 });
+  ctx.fillStyle = ink; ctx.fillRect(x, y + 48, w * E.outExpo(build), 2);
+  // rows
+  const k = beatIndex(t);
+  const list = [...PREFILL];
+  for (let i = 0; i <= k; i++) list.push(ITEMS[i]);
+  const rowH = 54, top = y + 62, rowsN = 7;
+  const d = k >= 0 ? t - BEATS[k] : 9;
+  const shift = (1 - E.outExpo(seg(d, 0, .32))) * -rowH;
+  ctx.save(); ctx.beginPath(); ctx.rect(x - 10, top, w + 20, rowH * rowsN); ctx.clip();
+  for (let j = 0; j < Math.min(list.length, rowsN + 1); j++) {
+    const it = list[list.length - 1 - j], [cat, label, amt] = it;
+    const ry = top + j * rowH + shift + (1 - E.outExpo(seg(build, j * .06, .6 + j * .06))) * 30;
+    if (j === 0 && k >= 0) { ctx.fillStyle = CAT_BG[cat]; ctx.globalAlpha = build * .16 * (1 - seg(d, .1, .7)); ctx.fillRect(x - 10, ry, w + 20, rowH - 6); ctx.globalAlpha = build; }
+    ctx.fillStyle = cat === 2 ? C.ink : CAT_BG[cat]; ctx.fillRect(x, ry + 16, 6, 18);
+    text(`03/${String(2 + ((j * 7 + list.length) % 27)).padStart(2, '0')}`, x + 20, ry + 32, { w: 400, size: 14, col: ink, alpha: .5 });
+    text(label, x + 90, ry + 32, { w: 700, size: 19, f: JP, col: ink });
+    if (cat === 2) {
+      ctx.fillStyle = C.lime; ctx.fillRect(x + w - 88, ry + 12, 88, 26);
+      text('要確認', x + w - 44, ry + 31, { w: 900, size: 15, f: JP, col: ink, align: 'center' });
+    } else text((cat === 0 ? '+' : '−') + yen(amt), x + w, ry + 32, { w: 600, size: 18, col: cat === 0 ? C.blue : C.red, align: 'right' });
+    ctx.fillStyle = ink; ctx.globalAlpha = build * .12; ctx.fillRect(x, ry + rowH - 3, w, 1); ctx.globalAlpha = build;
+  }
+  ctx.restore();
+  // totals
+  const tt = totals(t), by = top + rowH * rowsN + 22;
+  ctx.fillStyle = ink; ctx.fillRect(x, by - 10, w * E.outExpo(build), 2);
+  text('売上', x, by + 30, { w: 900, size: 20, f: JP, col: C.blue });
+  text(yen(tt.rev), x + w, by + 32, { w: 600, size: 30, col: C.blue, align: 'right' });
+  text('経費', x, by + 76, { w: 900, size: 20, f: JP, col: C.red });
+  text(yen(tt.exp), x + w, by + 78, { w: 600, size: 30, col: C.red, align: 'right' });
+  ctx.restore();
+}
+function drawChart(t, x, y, w, h, build) {
+  if (build <= 0) return;
+  ctx.save(); ctx.globalAlpha = build;
+  text('MONTHLY', x + 60, y - 6, { w: 600, size: 15, col: C.ink, track: 4 });
+  text('月次推移', x + 60, y + 16, { w: 700, size: 14, f: JP, col: C.ink, alpha: .55 });
+  const v = barValues(t), bw = w / 12, base = y + h;
+  ctx.fillStyle = C.ink; ctx.fillRect(x, base, w * E.outExpo(build), 2);
+  for (let i = 0; i < 12; i++) {
+    const e = E.outExpo(seg(build, i * .04, .5 + i * .04));
+    const bx = x + i * bw + 6;
+    ctx.fillStyle = C.blue; ctx.fillRect(bx, base - v[i][0] * (h - 40) * e, bw * .42, v[i][0] * (h - 40) * e);
+    ctx.fillStyle = C.red; ctx.fillRect(bx + bw * .46, base - v[i][1] * (h - 40) * e, bw * .22, v[i][1] * (h - 40) * e);
+    text(String(i + 1), bx + bw * .3, base + 20, { w: 400, size: 11, col: C.ink, align: 'center', alpha: .5 });
+  }
+  // cumulative line
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath();
+  let acc = 0; const pts = [];
+  for (let i = 0; i < 12; i++) { acc += v[i][0] - v[i][1] * .6; pts.push([x + i * bw + bw / 2, base - 30 - acc * 34]); }
+  const drawN = 12 * E.inOutCubic(seg(build, .3, 1));
+  pts.forEach((p, i) => { if (i <= drawN) i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+  ctx.stroke();
+  const hi = Math.min(11, Math.floor(drawN)); ctx.fillStyle = C.red;
+  ctx.beginPath(); ctx.arc(pts[hi][0], pts[hi][1], 5 + Math.sin(t * 10) * 1.5, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function drawFormula(t, build) {
+  if (build <= 0) return;
+  const tt = totals(t), cy = 972;
+  ctx.save(); ctx.globalAlpha = build;
+  const off = (1 - E.outExpo(build)) * 40;
+  let x = 700;
+  const seq = [
+    ['売上', JP, 900, 22, C.blue], [yen(tt.rev), MONO, 600, 30, C.ink], ['−', LAT, 400, 30, C.ink],
+    ['経費', JP, 900, 22, C.red], [yen(tt.exp), MONO, 600, 30, C.ink], ['=', LAT, 400, 30, C.ink],
+    ['所得', JP, 900, 22, C.ink], [yen(tt.rev - tt.exp), MONO, 600, 30, C.ink],
+  ];
+  seq.forEach(([s, f, w, sz, col], i) => {
+    font(w, sz, f); const mw = ctx.measureText(s).width;
+    const e = E.outExpo(seg(build, i * .05, .5 + i * .05));
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 4, cy - 40, mw + 8, 50); ctx.clip();
+    text(s, x, cy + (1 - e) * 44 + off * 0, { w, size: sz, f, col });
+    ctx.restore(); x += mw + 18;
+  });
+  if (tt.pend > .5) text(`＋保留 ${Math.round(tt.pend)}件`, x + 10, cy, { w: 900, size: 18, f: JP, col: C.ink, alpha: .9 });
+  ctx.restore();
+}
+function drawPanels(t, alpha = 1) {
+  const tb = t >= T_FREEZE && t < T_DARK ? T_FREEZE : t;
+  const bL = t >= T_RESTART ? 1 : E.outCubic(seg(tb, 2.35, 3.2));
+  const bR = t >= T_RESTART ? 1 : E.outCubic(seg(tb, 2.5, 3.3));
+  const bF = t >= T_RESTART ? 1 : seg(tb, 2.8, 3.6);
+  ctx.save(); ctx.globalAlpha = alpha;
+  drawLedger(tb, 112, 226, 420, bL);
+  drawCard(tb, 1380, 200, 440, 250, bR);
+  drawChart(tb, 1380, 580, 440, 200, bR);
+  drawFormula(tb, bF);
+  ctx.restore();
+}
+
+/* mini receipts that fly out of the paws on each beat */
+const MINI = makeLater();
+function makeLater() { return { img: null }; }
+function drawMini(t) {
+  const tb = t >= T_FREEZE && t < T_DARK ? T_FREEZE : t;
+  if (tb < 3 || t >= T_DARK) return;
+  BEATS.forEach((b, i) => {
+    const d = tb - b; if (d < 0 || d > .5) return;
+    const cat = ITEMS[i][0], p = E.outCubic(seg(d, .04, .46));
+    const sx = cat === 0 ? -80 : cat === 1 ? 80 : 0, sy = DESK - 40;
+    const tx = cat === 0 ? -700 : cat === 1 ? 680 : (i % 2 ? 300 : -260), ty = cat === 2 ? -900 : cat === 0 ? -80 : -300;
+    for (let g = 3; g >= 0; g--) {
+      const pp = E.outCubic(seg(d - g / 200, .04, .46));
+      const x = lerp(sx, tx, pp), y = lerp(sy, ty, pp) - Math.sin(PI * pp) * 160;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(pp * (cat === 2 ? 9 : 2.4) * (cat === 0 ? -1 : 1));
+      const s = lerp(.5, cat === 2 ? .9 : .25, pp) * (1 - seg(pp, .85, 1));
+      ctx.scale(s, s); ctx.globalAlpha = g ? .18 : 1;
+      ctx.drawImage(MINI.img, -MINI.img.width / 2, -MINI.img.height / 2);
+      ctx.restore();
+    }
+  });
+}
+
+/* phase A: typed calculations */
+const CALCS = [
+  { s: '4,980 + 12,000', x: 150, y: 190, t0: 1.25 }, { s: '× 1.10', x: 1580, y: 190, t0: 1.45 },
+  { s: '= ¥18,678', x: 1360, y: 820, t0: 1.7 }, { s: '−3,240', x: 360, y: 820, t0: 1.55 },
+  { s: '∑ 1,284,000', x: 180, y: 560, t0: 1.9 }, { s: '%', x: 1650, y: 560, t0: 2.0 },
+];
+function drawCalcs(t) {
+  if (t < 1.2 || t > 3.2) return;
+  for (const c of CALCS) {
+    const p = seg(t, c.t0, c.t0 + .4); if (p <= 0) continue;
+    const out = E.inExpo(seg(t, 2.75, 3.05));
+    const n = Math.floor(c.s.length * p);
+    ctx.save(); ctx.translate(0, -out * 30); ctx.globalAlpha = 1 - out;
+    text(c.s.slice(0, n), c.x, c.y, { w: 600, size: 44, col: C.ink });
+    font(600, 44, MONO); const mw = ctx.measureText(c.s.slice(0, n)).width;
+    if (Math.floor(t * 8) % 2 === 0 || p < 1) { ctx.fillStyle = C.red; ctx.fillRect(c.x + mw + 4, c.y - 36, 16, 42); }
+    ctx.fillStyle = C.ink; ctx.fillRect(c.x, c.y + 14, mw * E.outExpo(seg(t, c.t0 + .2, c.t0 + .7)), 1.5);
+    ctx.restore();
+  }
+}
+
+/* giant background word */
+function drawGiant(t, collapse = 0) {
+  const tb = t >= T_FREEZE && t < T_DARK ? T_FREEZE : t;
+  if (tb < 2.9) return;
+  const { cur, prev, d } = cardAt(tb);
+  const lab = c => c < 0 ? '仕分け' : CAT_JP[c];
+  L(.4, () => {
+    ctx.save(); ctx.translate(0, -30); ctx.scale(1 - collapse, 1 - collapse);
+    const build = E.outExpo(seg(tb, 2.9, 3.5));
+    ctx.globalAlpha = build;
+    font(900, 520, JP); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.rect(-1200, -330, 2400, 640); ctx.clip();
+    const q = E.inOutExpo(seg(d, 0, .3));
+    const draw = (s, off, col) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeText(s, 0, off); };
+    if (q < 1) draw(lab(prev), -q * 640, 'rgba(20,20,20,.16)');
+    draw(lab(cur), (1 - q) * 640, 'rgba(20,20,20,.16)');
+    ctx.restore();
+  });
+}
+
+/* ---------- backgrounds ---------- */
+function drawGrid(t, col, alpha, grow = 1) {
+  L(.2, () => {
+    ctx.strokeStyle = col; ctx.globalAlpha = alpha; ctx.lineWidth = 1;
+    for (let i = -8; i <= 8; i++) {
+      const x = i * 130, e = E.outExpo(seg(grow, Math.abs(i) * .03, .5 + Math.abs(i) * .03));
+      line(x, -600 * e, x, 600 * e);
+    }
+    for (let j = -5; j <= 5; j++) {
+      const y = j * 130, e = E.outExpo(seg(grow, Math.abs(j) * .04, .5 + Math.abs(j) * .04));
+      line(-1100 * e, y, 1100 * e, y);
+    }
+    ctx.globalAlpha = 1;
+  });
+}
+function drawDesk(t, col = C.ink, grow = 1) {
+  L(1, () => {
+    const e = E.outExpo(grow);
+    ctx.fillStyle = col; ctx.fillRect(-560 * e, DESK, 1120 * e, 5);
+    ctx.globalAlpha = .5; ctx.fillRect(-560 * e, DESK + 12, 1120 * e, 1); ctx.globalAlpha = 1;
+  });
+}
+
+/* ---------- HERO receipt ---------- */
+function drawHeroReceipt(w, h) {
+  ctx.save(); ctx.translate(6, 10); zigPath(ctx, w, h, 7); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.restore();
+  zigPath(ctx, w, h, 7); ctx.fillStyle = C.white; ctx.fill();
+  const x0 = -w / 2 + 18, x1 = w / 2 - 18; let y = -h / 2 + 40;
+  text('WANWAN MART', 0, y, { w: 600, size: 17, col: C.ink, align: 'center', track: 2 }); y += 22;
+  text('ワンワンマート 代々木店', 0, y, { w: 400, size: 12, f: JP, col: C.ink, align: 'center', alpha: .7 }); y += 18;
+  text('2026-03-14  18:42', 0, y, { w: 400, size: 12, col: C.ink, align: 'center', alpha: .6 }); y += 16;
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = C.grey; ctx.lineWidth = 1; line(x0, y, x1, y); ctx.setLineDash([]); y += 30;
+  text('国産 鹿肉ジャーキー', x0, y, { w: 700, size: 15, f: JP, col: C.ink }); y += 22;
+  text('3 × 1,660', x0 + 10, y, { w: 400, size: 13, col: C.ink, alpha: .7 });
+  text('¥4,980', x1, y, { w: 600, size: 14, col: C.ink, align: 'right' }); y += 18;
+  ctx.setLineDash([4, 4]); line(x0, y, x1, y); ctx.setLineDash([]); y += 34;
+  text('合計', x0, y, { w: 900, size: 18, f: JP, col: C.ink });
+  text('¥4,980', x1, y, { w: 600, size: 24, col: C.ink, align: 'right' }); y += 20;
+  text('(内消費税 ¥368)', x1, y, { w: 400, size: 11, f: JP, col: C.ink, align: 'right', alpha: .6 }); y += 20;
+  const r = rng(3); let bx = x0; ctx.fillStyle = C.ink;
+  while (bx < x1) { const bw = r() < .5 ? 1.2 : 3; ctx.fillRect(bx, y, bw, 26); bx += bw + 1 + r() * 2.5; }
+}
+function heroState(t) {
+  if (t < 7.7) return null;
+  const p = seg(t, 7.72, 8.52), e = E.outCubic(p);
+  const sway = (1 - p);
+  let x = Math.sin(p * PI * 2.3) * 70 * sway, y = lerp(-780, DESK - 50, e);
+  let r = Math.sin(p * PI * 2.3 + .6) * .4 * sway - .05 * p;
+  r += wobble(t - 8.52, 4, .3) * .03;
+  if (t >= T_RESTART) { const s = convergeState({ bang: -1.2, brad: 900, rot0: .3, k: 0 }, t); return { x: s.x, y: DESK - 50 + s.y, r: -.05 + s.r, s: s.s, a: s.a }; }
+  return { x, y, r, s: 1, a: 1 };
+}
+
+/* ---------- scenes ---------- */
+function sceneMain(t, real) {
+  // t may be frozen at 7.0; `real` drives only HUD
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  drawGrid(t, C.ink, .07, seg(t, 0, 1.2));
+  drawGiant(t);
+  drawReceipts(t, 0);
+  drawReceipts(t, 1);
+  drawGlyphs(t, false);
+  drawRings(t);
+  drawDesk(t, C.ink, seg(t, .5, 1.3));
+  // dog with circular reveal
+  const ds = dogState(t);
+  L(1, () => {
+    ctx.save();
+    const rr = E.outExpo(seg(t, .5, .85)) * 330;
+    const disc = 1 - E.inOutExpo(seg(t, 1.0, 1.45));
+    if (t < 1.5) {
+      ctx.fillStyle = C.red; ctx.beginPath(); ctx.arc(0, -60, rr * (.4 + .6 * disc) + 1, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, -60, t < 1.0 ? rr : 330 + (t - 1) * 3000, 0, TAU); ctx.clip();
+    }
+    ctx.translate(0, DESK); drawDog(ds);
+    ctx.restore();
+    ctx.save(); ctx.translate(0, 0); drawMini(t); ctx.restore();
+  });
+  drawGlyphs(t, true);
+  drawCalcs(t);
+  drawPanels(t);
+  drawIcons(t);
+  drawReceipts(t, 2, 5);
+}
+function sceneDark(t) {
+  ctx.fillStyle = '#151515'; ctx.fillRect(0, 0, W, H);
+  const on = t < 7.72 ? 0 : t < 7.76 ? 1 : t < 7.8 ? .25 : t < 7.84 ? 1 : 1;
+  const [sx, sy] = toScreen(0, -40);
+  if (on > 0) {
+    const g = ctx.createRadialGradient(sx, sy, 20, sx, sy, 760 * CAM.z);
+    g.addColorStop(0, `rgba(70,64,56,${.95 * on})`); g.addColorStop(.55, `rgba(40,37,33,${.7 * on})`); g.addColorStop(1, 'rgba(21,21,21,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+  drawGrid(t, C.paper, .035 * on, 1);
+  // dust motes
+  const r = rng(77);
+  for (let i = 0; i < 46; i++) {
+    const d = .4 + r() * 1.1, bx = (r() - .5) * 1100, by = (r() - .5) * 800, sp = 8 + r() * 14, ph = r() * TAU, sz = 1 + r() * 2.6;
+    L(d, () => {
+      ctx.fillStyle = C.paper; ctx.globalAlpha = on * (.15 + .35 * (.5 + .5 * Math.sin(t * 1.3 + ph)));
+      ctx.beginPath(); ctx.arc(bx + Math.sin(t * .4 + ph) * 30, by - ((t - 7.6) * sp) % 800 + 200, sz, 0, TAU); ctx.fill();
+    });
+  }
+  ctx.globalAlpha = 1;
+  drawDesk(t, 'rgba(236,232,223,.55)', on);
+  const ds = dogState(t), hs = heroState(t);
+  L(1, () => {
+    ctx.save(); ctx.globalAlpha = on;
+    ctx.translate(0, DESK);
+    drawDog(ds, () => {
+      if (!hs) return;
+      ctx.save(); ctx.translate(hs.x, hs.y - DESK); ctx.rotate(hs.r); ctx.scale(hs.s, hs.s); drawHeroReceipt(210, 270); ctx.restore();
+    });
+    ctx.restore();
+    // scan UI around receipt
+    if (t > 8.55 && t < T_RESTART) {
+      const e = E.outExpo(seg(t, 8.55, 8.8)), cx = 0, cy = DESK - 50, bw = 138 + (1 - e) * 60, bh = 166 + (1 - e) * 60;
+      ctx.strokeStyle = C.lime; ctx.lineWidth = 3; ctx.globalAlpha = e;
+      for (const [sx2, sy2] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        ctx.beginPath(); ctx.moveTo(cx + sx2 * bw, cy + sy2 * (bh - 26)); ctx.lineTo(cx + sx2 * bw, cy + sy2 * bh); ctx.lineTo(cx + sx2 * (bw - 26), cy + sy2 * bh); ctx.stroke();
+      }
+      const sc = seg(t, 8.7, 9.2);
+      if (sc > 0 && sc < 1) { const yy = cy - bh + sc * bh * 2; ctx.globalAlpha = .9; ctx.fillStyle = C.lime; ctx.fillRect(cx - bw, yy, bw * 2, 2); ctx.globalAlpha = .12; ctx.fillRect(cx - bw, yy - 40, bw * 2, 40); }
+      ctx.globalAlpha = e;
+      const label = t < 9.2 ? 'SCANNING' + '.'.repeat(1 + Math.floor(t * 6) % 3) : 'CATEGORY: ???';
+      const blink = t > 9.2 && Math.floor(t * 5) % 2 === 0 ? .35 : 1;
+      text(label, cx - bw, cy - bh - 16, { w: 600, size: 15, col: C.lime, track: 2, alpha: blink });
+      text('CONF. 0.03%', cx + bw, cy + bh + 26, { w: 400, size: 13, col: C.lime, align: 'right', alpha: .8 * e });
+      ctx.globalAlpha = 1;
+    }
+  });
+  // typography
+  const p = t - 9.55;
+  if (p > 0) {
+    ctx.save();
+    const sc = 1 + .025 * seg(t, 9.6, 11);
+    ctx.translate(1040, 540); ctx.scale(sc, sc); ctx.translate(-1040, -540);
+    text('Q. IS THIS DEDUCTIBLE?', 1046, 262, { w: 600, size: 20, col: C.lime, track: 5, alpha: E.outExpo(seg(t, 9.5, 9.8)) });
+    riseText('これ、', 1030, 505, 236, p, { col: C.paper, stagger: .06 });
+    riseText('経費？', 1030, 770, 236, p - .18, { stagger: .06, colorFn: (i) => i === 2 ? C.red : C.paper });
+    ctx.fillStyle = C.paper; ctx.fillRect(1046, 822, 720 * E.outExpo(seg(t, 10.0, 10.6)), 2);
+    text('CASE No.0412', 1046, 860, { w: 500, size: 15, col: C.paper, alpha: .6 * seg(t, 10.2, 10.5), track: 3 });
+    text('STATUS: PENDING', 1766, 860, { w: 500, size: 15, col: C.paper, align: 'right', alpha: .6 * seg(t, 10.25, 10.55), track: 3 });
+    ctx.restore();
+  }
+}
+function sceneReboot(t) {
+  const c = E.inExpo(seg(t, T_CONV, 12.82));
+  const flick = t < 11.2 ? (Math.floor(t * 60) % 3 === 0 ? .3 : 1) : 1;
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  drawGrid(t, C.ink, .07 * (1 - c), 1);
+  drawGiant(t, c);
+  drawReceipts(t, 0); drawReceipts(t, 1);
+  drawGlyphs(t, false);
+  drawRings(t, c);
+  const ds = dogState(t);
+  L(1, () => { ctx.save(); ctx.translate(0, DESK); drawDog(ds); ctx.restore(); });
+  const hs = heroState(t);
+  if (hs) L(1, () => { ctx.save(); ctx.translate(hs.x, hs.y); ctx.rotate(hs.r); ctx.scale(hs.s, hs.s); ctx.globalAlpha = hs.a; drawHeroReceipt(210, 270); ctx.restore(); });
+  drawGlyphs(t, true);
+  // HUD collapse into the center
+  ctx.save();
+  ctx.translate(W / 2, H / 2); ctx.rotate(c * .9); ctx.scale(1 - c, 1 - c); ctx.translate(-W / 2, -H / 2);
+  drawPanels(t, flick * (1 - seg(c, .8, 1)));
+  ctx.globalAlpha = 1 - seg(c, .8, 1);
+  for (const ic of ICONS) { ctx.save(); ctx.translate(ic.to[0], ic.to[1]); ctx.scale(ic.to[2], ic.to[2]); ic.fn(t); ctx.restore(); }
+  ctx.restore();
+  drawReceipts(t, 2, 4);
+  // converge streaks
+  if (c > 0) {
+    const r = rng(9);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.strokeStyle = C.ink;
+    for (let i = 0; i < 40; i++) {
+      const a = r() * TAU + c * 2, r0 = (300 + r() * 900) * (1 - c), len = 60 + 400 * c;
+      ctx.globalAlpha = .5 * c; ctx.lineWidth = 1 + r() * 2;
+      line(Math.cos(a) * r0, Math.sin(a) * r0 * .7, Math.cos(a) * (r0 + len), Math.sin(a) * (r0 + len) * .7);
+    }
+    ctx.restore();
+  }
+}
+function drawPlate(t) {
+  const w = 700, h = 1060;
+  const e = E.outExpo(seg(t, 12.9, 13.5));
+  const y = lerp(-1250, 0, e);
+  L(.8, () => {
+    for (let g = 4; g >= 0; g--) {
+      const eg = E.outExpo(seg(t - g / 200, 12.9, 13.5)), yg = lerp(-1250, 0, eg);
+      if (g && Math.abs(yg - y) < 4) continue;
+      ctx.save(); ctx.translate(0, g ? yg : y); ctx.globalAlpha = g ? .15 : 1;
+      if (!g) { ctx.save(); ctx.translate(10, 16); zigPath(ctx, w, h, 12); ctx.fillStyle = 'rgba(20,20,20,.12)'; ctx.fill(); ctx.restore(); }
+      zigPath(ctx, w, h, 12); ctx.fillStyle = C.white; ctx.fill();
+      if (!g) {
+        const q = seg(t, 13.3, 14.4), a = .8;
+        text('★ WANWAN MART ★', 0, -410, { w: 600, size: 26, col: C.ink, align: 'center', track: 4, alpha: a });
+        text('ワンワンマート 代々木店  TEL 03-XXXX-XXXX', 0, -374, { w: 400, size: 15, f: JP, col: C.ink, align: 'center', alpha: .55 });
+        text('2026-03-14  18:42   REG#02  No.0412', 0, -346, { w: 400, size: 15, col: C.ink, align: 'center', alpha: .55 });
+        ctx.setLineDash([6, 6]); ctx.strokeStyle = C.grey; ctx.lineWidth = 1.5; line(-300, -318, 300, -318); line(-300, 226, 300, 226); ctx.setLineDash([]);
+        text('国産 鹿肉ジャーキー', -300, 266, { w: 700, size: 22, f: JP, col: C.ink, alpha: .85 });
+        text('3 × ¥1,660', -290, 296, { w: 400, size: 18, col: C.ink, alpha: .55 });
+        text('¥4,980', 300, 296, { w: 600, size: 20, col: C.ink, align: 'right', alpha: .8 });
+        text('合計', -300, 350, { w: 900, size: 26, f: JP, col: C.ink });
+        text('¥4,980', 300, 352, { w: 600, size: 38, col: C.ink, align: 'right' });
+        const r = rng(4); let bx = -300; ctx.fillStyle = C.ink;
+        while (bx < -300 + 600 * E.outExpo(q)) { const bw = r() < .5 ? 2 : 5; ctx.fillRect(bx, 392, bw, 50); bx += bw + 2 + r() * 4; }
+        text('THANK YOU — ご来店ありがとうございます', 0, 478, { w: 400, size: 14, f: JP, col: C.ink, align: 'center', alpha: .5 });
+      }
+      ctx.restore();
+    }
+  });
+}
+function drawStamp(t) {
+  const d = t - 13.95; if (d < -.12) return;
+  const inn = E.inCubic(seg(t, 13.83, 13.95));
+  const s = d < 0 ? lerp(3.2, 1, inn) : 1 - wobble(d, 6, .35) * .04;
+  const a = d < 0 ? inn : 1;
+  L(.8, () => {
+    ctx.save(); ctx.translate(262, -262); ctx.rotate(-.22 + (d < 0 ? (1 - inn) * .4 : 0)); ctx.scale(s, s);
+    ctx.globalAlpha = .9 * a; ctx.strokeStyle = C.red; ctx.fillStyle = C.red;
+    ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, 0, 118, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 100, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 62, 0, TAU); ctx.stroke();
+    // ring text
+    const str = 'FILED BY THE DOG ● 2026 ● FILED BY THE DOG ● 2026 ● ';
+    font(700, 15, MONO);
+    [...str].forEach((ch, i) => { ctx.save(); ctx.rotate(i / str.length * TAU); ctx.translate(0, -81); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ch, 0, 0); ctx.restore(); });
+    // paw print
+    ell(0, 14, 24, 19); ctx.fill();
+    for (const [x, y, r] of [[-29, -14, 10], [-10, -32, 10.5], [10, -32, 10.5], [29, -14, 10]]) { ell(x, y, r * .85, r); ctx.fill(); }
+    ctx.restore();
+    // ink specks
+    if (d > 0) {
+      const r = rng(13);
+      for (let i = 0; i < 14; i++) {
+        const a2 = r() * TAU, rr = 130 + r() * 60 * E.outExpo(seg(d, 0, .3));
+        ctx.fillStyle = C.red; ctx.globalAlpha = .7 * (1 - seg(d, .6, 1.2));
+        ctx.beginPath(); ctx.arc(262 + Math.cos(a2) * rr, -262 + Math.sin(a2) * rr, 1 + r() * 3, 0, TAU); ctx.fill();
+      }
+    }
+  });
+}
+function sceneTitle(t) {
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  drawGrid(t, C.ink, .07, seg(t, 12.85, 13.6));
+  // shockwave
+  const sw = seg(t, 12.85, 13.5);
+  if (sw < 1) {
+    const [cx, cy] = [W / 2, H / 2];
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 24 * (1 - sw); ctx.beginPath(); ctx.arc(cx, cy, E.outExpo(sw) * 1300, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = C.red; ctx.lineWidth = 10 * (1 - sw); ctx.beginPath(); ctx.arc(cx, cy, E.outExpo(seg(t, 12.9, 13.6)) * 1000, 0, TAU); ctx.stroke();
+    if (t < 12.95) { ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 40 * (1 - seg(t, 12.85, 12.95)), 0, TAU); ctx.fill(); }
+  }
+  // floating particles (parallax)
+  const r = rng(51);
+  for (let i = 0; i < 26; i++) {
+    const d = .3 + r() * 1.2, bx = (r() - .5) * 2000, by = (r() - .5) * 1200, ch = '¥%+×0123'[Math.floor(r() * 8)], sz = 14 + r() * 40;
+    const e = E.outExpo(seg(t, 12.9 + r() * .3, 13.8));
+    L(d, () => text(ch, bx * (.6 + .4 * e), by * (.6 + .4 * e) - (t - 13) * 14 * d, { w: 900, size: sz, f: LAT, col: i % 5 === 0 ? C.red : C.ink, align: 'center', alpha: .22 * e }));
+  }
+  drawPlate(t);
+  // title typography
+  L(1, () => {
+    const p = t - 13.12;
+    text('— 令和8年分 —', 0, -208, { w: 700, size: 22, f: JP, col: C.ink, align: 'center', track: 10, alpha: E.outExpo(seg(t, 13.35, 13.7)) });
+    if (p > 0) {
+      font(900, 238, JP);
+      const tw = ctx.measureText('確定申告').width + 3 * 6;
+      riseText('確定申告', -tw / 2, 60, 238, p, { col: C.ink, stagger: .065, dur: .6, track: 6 });
+    }
+    // inverted band
+    const b = E.inOutExpo(seg(t, 13.42, 13.82)), bw = 820, by = 124;
+    if (b > 0) {
+      ctx.fillStyle = C.ink; ctx.fillRect(-bw / 2, by, bw * b, 74);
+      ctx.save(); ctx.beginPath(); ctx.rect(-bw / 2, by, bw * b, 74); ctx.clip();
+      const tq = E.outExpo(seg(t, 13.55, 14.0));
+      text('THE FINAL RECEIPT', 8, by + 52 + (1 - tq) * 40, { w: 800, size: 42, f: LAT, col: C.paper, align: 'center', track: 16 });
+      ctx.restore();
+      ctx.fillStyle = C.red; ctx.fillRect(-bw / 2 + bw * b - 8, by, 8 * (1 - seg(t, 13.8, 13.9)), 74);
+    }
+  });
+  drawStamp(t);
+  // micro captions
+  const cap = E.outExpo(seg(t, 14.0, 14.5));
+  text('A MOTION STUDY ON TAXES AND DOGS', 64, H - 60, { w: 500, size: 13, col: C.ink, track: 4, alpha: .7 * cap });
+  text('申告期限 3/15 — 犬にも等しく訪れる。', W - 64, H - 60, { w: 700, size: 14, f: JP, col: C.ink, align: 'right', alpha: .7 * cap });
+}
+
+/* ---------- global overlays ---------- */
+function hud(t, dark) {
+  const col = dark ? C.paper : C.ink;
+  const a = E.outExpo(seg(t, 0, .6));
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.strokeStyle = col; ctx.lineWidth = 2;
+  const m = 40, s = 26;
+  for (const [x, y, dx, dy] of [[m, m, 1, 1], [W - m, m, -1, 1], [W - m, H - m, -1, -1], [m, H - m, 1, -1]]) {
+    ctx.beginPath(); ctx.moveTo(x, y + dy * s); ctx.lineTo(x, y); ctx.lineTo(x + dx * s, y); ctx.stroke();
+  }
+  const frames = Math.floor(t * 60);
+  const tc = `00:00:${String(Math.floor(t)).padStart(2, '0')}:${String(frames % 60).padStart(2, '0')}`;
+  text('THE FINAL RECEIPT', 84, 86, { w: 600, size: 14, col, track: 4 });
+  text('確定申告 2026 / SHIBA-01', 84, 108, { w: 700, size: 13, f: JP, col, alpha: .55 });
+  text(tc, W - 84, 86, { w: 500, size: 14, col, align: 'right', track: 2 });
+  const frozen = t >= T_FREEZE && t < T_DARK;
+  const recOn = frozen ? true : Math.floor(t * 2) % 2 === 0;
+  ctx.fillStyle = frozen ? C.red : C.red; ctx.globalAlpha = a * (recOn ? 1 : .25);
+  if (frozen) { ctx.fillRect(W - 250, 74, 5, 16); ctx.fillRect(W - 241, 74, 5, 16); }
+  else { ctx.beginPath(); ctx.arc(W - 244, 81, 6, 0, TAU); ctx.fill(); }
+  ctx.globalAlpha = a;
+  const status = t < 3 ? 'INGEST' : t < T_FREEZE ? 'SORTING' : t < T_RESTART ? 'HOLD' : t < T_TITLE ? 'RESUME' : 'FILED';
+  text(status, W - 84, 108, { w: 600, size: 13, col: frozen || (t >= 7.6 && t < 11) ? C.red : col, align: 'right', track: 3 });
+  // progress
+  const prog = t < T_FREEZE ? Math.min(.97, t / 7.2) : t < T_RESTART ? .97 : t < T_TITLE ? lerp(.97, 1, seg(t, 11, 12.8)) : 1;
+  ctx.fillStyle = col; ctx.globalAlpha = a * .2; ctx.fillRect(84, H - 84, 300, 2);
+  ctx.globalAlpha = a; ctx.fillStyle = t >= 7.6 && t < 11 ? C.red : col; ctx.fillRect(84, H - 84, 300 * prog, 2);
+  text(String(Math.floor(prog * 100)).padStart(2, '0') + '%', 396, H - 78, { w: 500, size: 12, col, alpha: .7 });
+  text(`FRAME ${String(frames).padStart(4, '0')} / 0900`, W - 84, H - 78, { w: 400, size: 12, col, align: 'right', alpha: .6 });
+  ctx.restore();
+}
+let GRAIN = null;
+function makeGrain() {
+  GRAIN = document.createElement('canvas'); GRAIN.width = GRAIN.height = 256;
+  const g = GRAIN.getContext('2d'), id = g.createImageData(256, 256), r = rng(1);
+  for (let i = 0; i < id.data.length; i += 4) { const v = r() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  g.putImageData(id, 0, 0);
+}
+function post(t, dark) {
+  ctx.save();
+  const f = Math.floor(t * 60);
+  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = dark ? .1 : .07;
+  const pat = ctx.createPattern(GRAIN, 'repeat');
+  ctx.translate((f * 71) % 256, (f * 131) % 256); ctx.fillStyle = pat; ctx.fillRect(-256, -256, W + 512, H + 512);
+  ctx.restore();
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * 1.05);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, dark ? 'rgba(0,0,0,.55)' : 'rgba(40,30,20,.16)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+/* ---------- frame ---------- */
+function renderFrame(t) {
+  t = clamp(t, 0, DUR - 1e-6);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  CAM = camera(t);
+  let dark = false;
+  if (t < T_SHUT) sceneMain(t < T_FREEZE ? t : T_FREEZE, t);
+  else if (t < T_DARK) {
+    sceneMain(T_FREEZE, t);
+    // shutter: staggered bands close over the frozen frame
+    const n = 9, bh = H / n;
+    ctx.fillStyle = '#151515';
+    for (let i = 0; i < n; i++) {
+      const e = E.inOutExpo(seg(t, T_SHUT + i * .022, T_SHUT + .16 + i * .022));
+      const dir = i % 2 ? -1 : 1;
+      ctx.fillRect(dir > 0 ? 0 : W * (1 - e), i * bh - 1, W * e, bh + 2);
+    }
+    dark = t > 7.45;
+  } else if (t < T_RESTART) { sceneDark(t); dark = true; }
+  else if (t < T_TITLE) {
+    if (t < 11.4) {
+      sceneDark(t);
+      const [hx, hy] = toScreen(0, -40);
+      const r1 = E.outExpo(seg(t, 11, 11.22)) * 2300, r2 = E.outExpo(seg(t, 11.07, 11.36)) * 2300;
+      ctx.fillStyle = C.red; ctx.beginPath(); ctx.arc(hx, hy, r1, 0, TAU); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.arc(hx, hy, r2, 0, TAU); ctx.clip(); sceneReboot(t); ctx.restore();
+      dark = r2 < 900;
+    } else sceneReboot(t);
+    // collapse flash
+    const fl = seg(t, 12.78, 12.85);
+    if (fl > 0) { ctx.fillStyle = C.ink; ctx.globalAlpha = fl; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  } else {
+    sceneTitle(t);
+    const fl = 1 - seg(t, 12.85, 12.93);
+    if (fl > 0) { ctx.fillStyle = C.white; ctx.globalAlpha = fl * .9; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  }
+  hud(t, dark);
+  post(t, dark);
+}
+
+/* ---------- boot + player ---------- */
+const JPTEXT = '確定申告経費売上？、これ仕分け帳簿月次推移所得保留件要確認令和年分犬済領収書支払レシートワンマート代々木店国産鹿肉ジャーキー合計内消費税ご来店ありがとうございます申告期限にも等しく訪れる。ロゴ制作報酬ドッグフードトリミング撮影モデル料骨（高級）おやつ業務用SNS案件ボール×リード新調ペット保険散歩代行ふわふわ枕肉球クリーム謎のシャンプー肖像使用爪切り—＋0123456789／';
+async function boot() {
+  const loads = [];
+  for (const w of [400, 700, 900]) loads.push(document.fonts.load(`${w} 40px "Noto Sans JP"`, JPTEXT));
+  for (const w of [400, 600, 800, 900]) loads.push(document.fonts.load(`${w} 40px Inter`, 'THE FINAL RECEIPT ¥%+−×÷=0123456789READY'));
+  for (const w of [400, 500, 600, 700]) loads.push(document.fonts.load(`${w} 40px "IBM Plex Mono"`, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789¥%+−×÷=∑:.#/★●—()-, '));
+  try { await Promise.race([Promise.all(loads), new Promise(r => setTimeout(r, 8000))]); } catch (e) {}
+  for (const rc of RC) rc.img = makeReceiptImg(rc.w, rc.h, rc.seed, rc.layer === 2);
+  MINI.img = makeReceiptImg(120, 200, 424242, false);
+  makeGrain();
+  document.getElementById('loading').remove();
+  window.__ready = true;
+}
+window.renderFrame = renderFrame;
+
+const params = new URLSearchParams(location.search);
+if (params.has('render')) document.body.classList.add('render');
+boot().then(() => {
+  if (params.has('render')) { renderFrame(+params.get('t') || 0); return; }
+  const playBtn = document.getElementById('play'), scrub = document.getElementById('scrub'), tc = document.getElementById('tc');
+  let playing = true, t0 = performance.now(), cur = 0;
+  const setT = t => { cur = t; t0 = performance.now() - t * 1000; };
+  playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? 'PAUSE' : 'PLAY'; if (playing) setT(cur); };
+  scrub.oninput = () => { setT(+scrub.value); renderFrame(cur); };
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); playBtn.click(); } });
+  (function loop(now) {
+    if (playing) { cur = ((now - t0) / 1000) % DUR; scrub.value = cur; }
+    renderFrame(cur);
+    tc.textContent = cur.toFixed(2).padStart(5, '0') + ' / 15.00';
+    requestAnimationFrame(loop);
+  })(performance.now());
+});
+</script>
+</body>
+</html>
