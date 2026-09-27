@@ -22,7 +22,7 @@
 <script>
 (function(){
   const C = document.getElementById("c"), X = C.getContext("2d");
-  const W = 1920, H = 1080, BAR = 138, END = 24;
+  const W = 1920, H = 1080, BAR = 138, END = 26.5;
   const MINCHO = '"Shippori Mincho B1", serif', CINZEL = '"Cinzel", serif';
 
   const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -32,7 +32,7 @@
   const rng = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
   // 衝撃（画面揺れ＋白フラッシュ）のタイミング
-  const HITS = [[11.8, 22, .45], [15.6, 26, .9], [16.2, 26, .9], [16.8, 30, 1], [19.0, 44, 1]];
+  const HITS = [[11.8, 22, .45], [15.6, 26, .9], [16.2, 26, .9], [16.8, 30, 1], [20.2, 12, .55]];
 
   function gold(size){
     const g = X.createLinearGradient(0, -size * .55, 0, size * .55);
@@ -136,70 +136,93 @@
     text(str, W/2, H/2, { size, spacing: 10, alpha: a, scale: s, gold: isGold, shadow: "rgba(255,255,255,.35)", blur: 30 });
   }
 
-  // 夜明け〜おはよう
-  function sunrise(t){
-    const k = eo(p(t, 18.2, 19.6));
-    if(k <= 0) return;
-    const g = X.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#1b2a4a"); g.addColorStop(.38, "#6b3f8f"); g.addColorStop(.7, "#ff7e5f"); g.addColorStop(1, "#ffc46b");
-    X.globalAlpha = k; X.fillStyle = g; X.fillRect(0, 0, W, H); X.globalAlpha = 1;
+  // 夜明け：地平線に光がにじむ
+  function dawn(t){
+    if(t < 18.2 || t > 20.2) return;
+    const k = Math.pow(p(t, 18.2, 20.1), 1.6), y0 = 650;
+    X.fillStyle = "#000"; X.fillRect(0, 0, W, H);
+    const sky = X.createLinearGradient(0, 0, 0, y0);
+    sky.addColorStop(0, "rgba(0,0,0,0)"); sky.addColorStop(.55, `rgba(40,70,110,${.45 * k})`);
+    sky.addColorStop(.88, `rgba(230,130,70,${.8 * k})`); sky.addColorStop(1, `rgba(255,210,150,${k})`);
+    X.fillStyle = sky; X.fillRect(0, 0, W, y0);
+    // 地平線の光の芯（横長）
+    X.save(); X.translate(W/2, y0); X.scale(4, 1);
+    const core = X.createRadialGradient(0, 0, 0, 0, 0, 220);
+    core.addColorStop(0, `rgba(255,248,230,${k})`); core.addColorStop(.35, `rgba(255,190,110,${.7 * k})`); core.addColorStop(1, "rgba(255,120,60,0)");
+    X.fillStyle = core; X.fillRect(-500, -220, 1000, 440); X.restore();
+    // 山なみのシルエット
+    X.fillStyle = "#040507"; X.beginPath(); X.moveTo(0, H);
+    for(let x = 0; x <= W; x += 20) X.lineTo(x, y0 + 14 + Math.sin(x * .004) * 18 + Math.sin(x * .011 + 1) * 8);
+    X.lineTo(W, H); X.closePath(); X.fill();
+    streak(y0, .9 * k);
+    text("夜が、明ける。", W/2, 380, { size: 72, spacing: 20, alpha: win(t, 18.5, 20.2, .8, .3), shadow: "rgba(255,190,120,.3)", blur: 30 });
+  }
 
-    const sy = H + 300 - eo(p(t, 18.2, 19.4)) * 400, sx = W/2;
-    // 光条
-    X.save(); X.translate(sx, sy); X.rotate(t * .12);
-    X.globalCompositeOperation = "lighter";
-    for(let i = 0; i < 28; i++){
-      X.rotate(Math.PI * 2 / 28);
-      X.fillStyle = `rgba(255,220,150,${.09 * k})`;
-      X.beginPath(); X.moveTo(0, 0); X.lineTo(2400, -90); X.lineTo(2400, 90); X.closePath(); X.fill();
-    }
-    X.restore();
-    // 太陽
-    const glow = X.createRadialGradient(sx, sy, 0, sx, sy, 800);
-    glow.addColorStop(0, `rgba(255,250,220,${k})`); glow.addColorStop(.3, `rgba(255,200,110,${.85 * k})`);
-    glow.addColorStop(1, "rgba(255,140,80,0)");
-    X.fillStyle = glow; X.fillRect(0, 0, W, H);
-    const disc = X.createRadialGradient(sx, sy - 40, 0, sx, sy, 170);
-    disc.addColorStop(0, "#fffbe8"); disc.addColorStop(.7, "#ffe08a"); disc.addColorStop(1, "#ffb14e");
-    X.globalAlpha = k; X.fillStyle = disc; X.beginPath(); X.arc(sx, sy, 170, 0, Math.PI * 2); X.fill(); X.globalAlpha = 1;
-    // レンズフレア
+  // アナモルフィックの横フレア
+  function streak(y, a){
+    if(a <= .01) return;
     X.save(); X.globalCompositeOperation = "lighter";
-    const fg = X.createLinearGradient(0, 0, W, 0);
-    fg.addColorStop(0, "rgba(255,200,150,0)"); fg.addColorStop(.5, `rgba(255,255,240,${.8 * k})`); fg.addColorStop(1, "rgba(255,200,150,0)");
-    X.fillStyle = fg; X.fillRect(0, sy, W, 5);
-    [[.25, 60, "255,180,120"], [.5, 26, "180,220,255"], [.72, 90, "255,150,200"], [.9, 40, "255,230,150"]].forEach(([f, r, c]) => {
-      const fx = sx + (sx - 420 - sx) * f * 1.6, fy = sy + (240 - sy) * f;
-      X.fillStyle = `rgba(${c},${.1 * k})`;
-      X.beginPath(); X.arc(fx, fy, r, 0, Math.PI * 2); X.fill();
-    });
+    const g = X.createLinearGradient(0, 0, W, 0);
+    g.addColorStop(0, "rgba(90,150,255,0)"); g.addColorStop(.5, `rgba(200,225,255,${a})`); g.addColorStop(1, "rgba(90,150,255,0)");
+    X.fillStyle = g; X.fillRect(0, y - 1.5, W, 3);
+    const g2 = X.createLinearGradient(0, 0, W, 0);
+    g2.addColorStop(0, "rgba(60,120,255,0)"); g2.addColorStop(.5, `rgba(120,170,255,${a * .25})`); g2.addColorStop(1, "rgba(60,120,255,0)");
+    X.fillStyle = g2; X.fillRect(0, y - 14, W, 28);
+    X.restore();
+  }
+
+  // タイトル「おはよう。」：ボケ→ピント、光が走る
+  const TT = document.createElement("canvas"); TT.width = W; TT.height = 520;
+  const T = TT.getContext("2d");
+  function title(t){
+    if(t < 20.2) return;
+    const r = eo(p(t, 20.2, 21.8));
+    const ty = 470;
+    // 背後の逆光
+    const bl = X.createRadialGradient(W/2, ty, 0, W/2, ty, 900);
+    bl.addColorStop(0, `rgba(120,80,40,${.35 * r})`); bl.addColorStop(1, "rgba(0,0,0,0)");
+    X.fillStyle = bl; X.fillRect(0, 0, W, H);
+    // 舞うチリ
+    for(let i = 0; i < 60; i++){
+      const x = (rng(i + 3000) * W + (t - 20.2) * 14 * (rng(i + 3100) - .5) * 2 + W) % W;
+      const y = (rng(i + 3200) * H - (t - 20.2) * 8 * rng(i + 3300) + H) % H;
+      X.globalAlpha = r * .35 * (.4 + .6 * Math.abs(Math.sin(t * .8 + i)));
+      X.fillStyle = "#ffe2b0"; X.beginPath(); X.arc(x, y, .8 + rng(i + 3400) * 2.2, 0, Math.PI * 2); X.fill();
+    }
+    X.globalAlpha = 1;
+
+    const sp = 34 + (1 - r) * 60;
+    const sc = 1.1 - .1 * r + p(t, 21.8, END) * .03;
+    T.clearRect(0, 0, W, 520);
+    T.save(); T.translate(W/2 + sp / 2, 260); T.scale(sc, sc);
+    T.font = `800 230px ${MINCHO}`; T.letterSpacing = sp + "px"; T.textAlign = "center"; T.textBaseline = "middle";
+    T.fillStyle = "#3a2608"; T.fillText("おはよう。", 0, 5);
+    const g = T.createLinearGradient(0, -120, 0, 120);
+    g.addColorStop(0, "#fff6d8"); g.addColorStop(.35, "#e9c878"); g.addColorStop(.52, "#8a6420");
+    g.addColorStop(.6, "#c9a24e"); g.addColorStop(1, "#f6e2a8");
+    T.fillStyle = g; T.fillText("おはよう。", 0, 0);
+    T.restore();
+    // 光のスイープ
+    const sx = -500 + p(t, 21.2, 22.6) * (W + 1000);
+    T.globalCompositeOperation = "source-atop";
+    const sg = T.createLinearGradient(sx - 220, 0, sx + 220, 0);
+    sg.addColorStop(0, "rgba(255,255,255,0)"); sg.addColorStop(.5, "rgba(255,252,240,.85)"); sg.addColorStop(1, "rgba(255,255,255,0)");
+    T.fillStyle = sg; T.fillRect(0, 0, W, 520);
+    T.globalCompositeOperation = "source-over";
+
+    X.save();
+    X.globalAlpha = r; X.filter = `blur(${(1 - r) * 22}px)`;
+    X.shadowColor = `rgba(255,200,120,${.35 * r})`; X.shadowBlur = 50;
+    X.drawImage(TT, 0, ty - 260);
     X.restore();
 
-    // おはよう。
-    if(t >= 19.0){
-      const q = eo(p(t, 19.0, 19.28));
-      const s = 2.4 - 1.4 * q + p(t, 19.28, END) * .05;
-      text("おはよう。", W/2, 340, { size: 250, spacing: 30, scale: s, gold: true, alpha: cl(q * 1.5), shadow: "rgba(60,20,40,.55)", blur: 40 });
-    }
-    // 火花
-    if(t >= 19.0){
-      const dt = t - 19.0;
-      X.save(); X.globalCompositeOperation = "lighter";
-      for(let i = 0; i < 220; i++){
-        const life = 1.2 + rng(i + 2000) * 1.6;
-        if(dt > life) continue;
-        const an = rng(i + 2100) * Math.PI * 2, v = 500 + rng(i + 2200) * 1300;
-        const d = v * (1 - Math.exp(-3 * dt)) / 3;
-        const x = W/2 + Math.cos(an) * d * 1.3, y = 340 + Math.sin(an) * d * .8 + 160 * dt * dt;
-        X.globalAlpha = 1 - dt / life;
-        X.fillStyle = ["#fff3c4", "#ffd36e", "#ff9a7a", "#ffffff"][i % 4];
-        X.beginPath(); X.arc(x, y, 2 + rng(i + 2300) * 3, 0, Math.PI * 2); X.fill();
-      }
-      X.restore(); X.globalAlpha = 1;
-    }
-    text("今日も、いい一日を。", W/2, 530, { size: 60, spacing: 18, alpha: eo(p(t, 20.3, 21.1)), shadow: "rgba(60,20,40,.6)", blur: 20 });
-    const c = eo(p(t, 21.3, 22.1));
-    text("Hwam", W/2, 640, { size: 76, font: CINZEL, weight: 700, spacing: 22, color: "#fff4d6", alpha: c, shadow: "rgba(60,20,40,.6)", blur: 20 });
-    text("毎朝、全国一斉公開。", W/2, 720, { size: 34, spacing: 12, alpha: c, color: "#fff4e0", shadow: "rgba(60,20,40,.7)", blur: 16 });
+    streak(ty, .8 * Math.exp(-(t - 20.2) * 1.4) + .12 * r);
+
+    // クレジット
+    const c = eo(p(t, 22.8, 23.8));
+    X.globalAlpha = c * .6; X.fillStyle = "#c9a24e"; X.fillRect(W/2 - 120, 700, 240, 1); X.globalAlpha = 1;
+    text("Hwam", W/2, 760, { size: 50, font: CINZEL, weight: 700, spacing: 24, color: "#efe6d2", alpha: c });
+    text("毎朝、全国一斉公開。", W/2, 830, { size: 30, spacing: 14, color: "#b9ad96", alpha: eo(p(t, 23.3, 24.3)) });
   }
 
   function draw(t){
@@ -229,7 +252,8 @@
     slam(t, "まぶたが", 16.2, 16.75, 200, false);
     slam(t, "開く。", 16.8, 17.4, 230, true);
     text("……", W/2, H/2, { size: 70, alpha: win(t, 17.5, 18.3, .2, .2), color: "#8894aa" });
-    sunrise(t);
+    dawn(t);
+    title(t);
 
     X.setTransform(1, 0, 0, 1, 0, 0);
     // 白フラッシュ
@@ -246,11 +270,14 @@
       X.fillRect(rng(fr * 1000 + i) * W, rng(fr * 1000 + i + 77777) * H, 2, 2);
     }
     X.globalAlpha = 1;
+    // ラストは黒へ
+    const fo = p(t, END - .9, END);
+    if(fo > 0){ X.globalAlpha = fo; X.fillStyle = "#000"; X.fillRect(0, 0, W, H); X.globalAlpha = 1; }
     // シネスコの黒帯
     X.fillStyle = "#000"; X.fillRect(0, 0, W, BAR); X.fillRect(0, H - BAR, W, BAR);
   }
 
-  const ALL = "この予告編は、すべての朝にふさわしいと認められました世界が、まだ眠っている頃——誰もが、布団と戦っていた。アラーム、5回目。それでも——今、まぶたが開く。……おはよう。今日も、いい一日を。毎朝、全国一斉公開。";
+  const ALL = "この予告編は、すべての朝にふさわしいと認められました世界が、まだ眠っている頃——誰もが、布団と戦っていた。アラーム、5回目。それでも——今、まぶたが開く。……夜が、明ける。おはよう。毎朝、全国一斉公開。";
   const ready = Promise.all([
     document.fonts.load(`800 100px "Shippori Mincho B1"`, ALL),
     document.fonts.load(`700 100px Cinzel`, "THE FOLLOWING PREVIEW HAS BEEN APPROVED FOR ALL MORNINGS RATED G — GOOD MORNING Hwam PRESENTS"),
