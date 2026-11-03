@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=405">
+<title>NOIR COFFEE process scene (video only)</title>
+<!--
+  動画撮影専用のシーン。アプリ本体ではありません。
+  0〜7秒の作業画面は、実際の制作記録（git履歴・指示書・テスト出力・初版コード）をもとに再現しています。
+  7秒以降は ../../index.html を iframe で読み込んだ実物のアプリです。
+  描画は window.__render(t) で秒数から決定的に行います（build-process.js が毎フレーム呼ぶ）。
+-->
+<style>
+  :root { --ink:#0b0b0b; --paper:#f4f2ee; --mute:#8a877f; --line:#2a2a28; --panel:#141413; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 405px; height: 720px; overflow: hidden; background: var(--ink); color: var(--paper);
+    font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .mono { font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; }
+
+  /* テロップ帯（Codex版と共通の位置） */
+  #band { position: absolute; left: 0; top: 0; width: 405px; height: 140px; background: var(--ink); z-index: 50; overflow: hidden; }
+  .telop { position: absolute; left: 22px; right: 22px; top: 20px; font-weight: 900; font-size: 31px; line-height: 1.22; letter-spacing: -.01em; white-space: nowrap; }
+  .telop.big { font-size: 58px; top: 22px; line-height: 1; }
+  .telop.ver { font-size: 46px; top: 22px; line-height: 1; }
+  .telop .v { display: block; font-size: 15px; font-weight: 700; letter-spacing: .5em; margin-top: 12px; }
+  #note { position: absolute; left: 22px; bottom: 12px; font-size: 12px; letter-spacing: .14em; color: var(--mute); display: flex; gap: 14px; align-items: center; }
+  #note .tag { border: 1px solid var(--mute); padding: 1px 6px; color: var(--paper); border-color: var(--paper); }
+
+  /* PC風ウィンドウ */
+  .win { position: absolute; background: var(--panel); border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+  .bar { height: 22px; display: flex; align-items: center; gap: 5px; padding: 0 9px; border-bottom: 1px solid #2b2b29; font-size: 10px; color: var(--mute); }
+  .bar i { width: 7px; height: 7px; border-radius: 50%; background: #3a3a38; display: inline-block; }
+  .bar span { margin-left: 8px; letter-spacing: .02em; }
+  .body { position: absolute; left: 0; right: 0; top: 22px; bottom: 0; overflow: hidden; }
+
+  #term .body { padding: 10px 12px; font-size: 11.5px; line-height: 1.55; }
+  .ln { white-space: pre; overflow: hidden; }
+  .ln.user { color: var(--paper); }
+  .ln.dot::before { content: "● "; color: var(--paper); }
+  .ln.mute { color: var(--mute); }
+  .ln.err { background: var(--paper); color: var(--ink); display: inline-block; padding: 0 4px; }
+  .ln.ok { font-weight: 700; }
+  .ln.big { font-size: 15px; font-weight: 700; margin-top: 4px; }
+
+  #code .body { padding: 8px 0; font-size: 10.5px; line-height: 1.5; }
+  .cl { white-space: pre; display: flex; }
+  .cl b { width: 30px; text-align: right; padding-right: 10px; color: #55534e; font-weight: 400; flex: none; }
+  .cl .k { color: var(--paper); font-weight: 700; }
+  .cl .s { color: #c9c6be; }
+  .tabs { display: flex; height: 22px; border-bottom: 1px solid #2b2b29; font-size: 10px; }
+  .tabs span { padding: 4px 10px; color: var(--mute); border-right: 1px solid #2b2b29; }
+  .tabs span.on { color: var(--paper); background: #1d1d1b; }
+
+  #doc { position: absolute; background: var(--paper); color: var(--ink); border-radius: 6px; padding: 18px 18px; z-index: 20; }
+  #doc h3 { margin: 0 0 2px; font-size: 13px; letter-spacing: .12em; }
+  #doc .sub { margin: 0 0 12px; font-size: 11px; color: #5c5a55; }
+  #doc .sec { font-size: 11px; font-weight: 800; letter-spacing: .08em; margin: 12px 0 4px; }
+  #doc .p { font-size: 12.5px; line-height: 1.55; margin: 0; }
+  #doc ol { margin: 0; padding: 0; list-style: none; }
+  #doc li { font-size: 13.5px; line-height: 1.5; padding: 2px 6px; position: relative; }
+  #doc li .hl { position: absolute; inset: 0; background: var(--ink); transform-origin: left; z-index: -1; }
+  #doc li.on { color: var(--paper); }
+  #doc ol { position: relative; z-index: 0; }
+
+  #prev .body { background: var(--paper); }
+  #prev img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+  /* 実物のアプリ（405×600） */
+  #stage { position: absolute; left: 0; top: 0; width: 405px; height: 580px; transform-origin: 0 0; z-index: 30; overflow: hidden; background: var(--paper); }
+  #app { width: 405px; height: 580px; border: 0; display: block; transform-origin: 50% 100%; }
+</style>
+</head>
+<body>
+  <div id="band"><div id="telop" class="telop"></div><div id="note"></div></div>
+
+  <div id="term" class="win"><div class="bar"><i></i><i></i><i></i><span>claude — bloomstudio-pages</span></div><div class="body mono" id="termBody"></div></div>
+  <div id="code" class="win"><div class="bar"><i></i><i></i><i></i><span>bloom-lab/claude-code-version</span></div>
+    <div class="tabs mono" id="tabs"></div><div class="body mono" id="codeBody" style="top:44px"></div></div>
+  <div id="prev" class="win"><div class="bar"><i></i><i></i><i></i><span>preview</span></div><div class="body"><img id="shotA" src="../../screenshots/01_mobile_hero.png" alt=""><img id="shotB" src="../../screenshots/03_mobile_cart_bar.png" alt=""></div></div>
+
+  <div id="doc">
+    <h3>BLOOM LAB｜NOIR COFFEE</h3>
+    <p class="sub">Claude Code・Codex 共通制作指示書</p>
+    <p class="sec">1. プロジェクト概要</p>
+    <p class="p">架空のカフェ「NOIR COFFEE」のメニュー表を、実際に操作できる注文Webアプリへ進化させる。</p>
+    <p class="sec">4. 必須機能</p>
+    <ol id="req">
+      <li><span class="hl"></span>1. トップページのビジュアル演出</li>
+      <li><span class="hl"></span>2. 商品一覧表示（最低6商品）</li>
+      <li><span class="hl"></span>3. ドリンク・スイーツのカテゴリ切替</li>
+      <li><span class="hl"></span>5. カートへの追加</li>
+      <li><span class="hl"></span>7. 合計金額の自動計算</li>
+      <li><span class="hl"></span>8. 注文内容の確認画面</li>
+    </ol>
+  </div>
+
+  <div id="stage"><iframe id="app" title="NOIR COFFEE"></iframe></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  const out = k => 1 - Math.pow(1 - k, 3);
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const box = (el, x, y, w, h) => Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+
+  // 実データは build-process.js から渡される（初版コード・テスト出力）
+  let D = null;
+  window.__setData = d => { D = d; };
+
+  // ---- テロップ（共通） ----
+  const TELOPS = [
+    [0.0, 'AIにカフェの<br>注文アプリを作らせた', ''],
+    [2.0, '同じ指示で制作', ''],
+    [4.0, '制作中…', ''],
+    [7.0, '完成！', 'big'],
+    [10.0, '注文機能まで実装', ''],
+    [13.0, 'Claude Code<span class="v">VERSION</span>', 'ver'],
+  ];
+  let lastTelop = -1;
+  function telop(t) {
+    let i = 0; for (let j = 0; j < TELOPS.length; j++) if (t >= TELOPS[j][0]) i = j;
+    const [ts, html, cls] = TELOPS[i];
+    const el = $('#telop');
+    if (i !== lastTelop) { el.innerHTML = html; el.className = 'telop ' + cls; lastTelop = i; }
+    const k = out(seg(t, ts, ts + (cls ? 0.16 : 0.22)));
+    const fromScale = cls ? 1.35 : 1;
+    el.style.transform = `translateY(${(1 - k) * 46}px) scale(${lerp(fromScale, 1, k)})`;
+    el.style.transformOrigin = 'left center';
+    el.style.opacity = k;
+  }
+
+  // ---- 注記（再現の明記・実際の時刻） ----
+  function note(t) {
+    const n = $('#note');
+    if (t < 7) {
+      // 実際の時刻：開始 06:06:38、初回コミット 06:12:05（UTC）
+      let clock = '';
+      if (t >= 4) {
+        const s0 = 6 * 3600 + 6 * 60 + 38, s1 = 6 * 3600 + 12 * 60 + 5;
+        const s = Math.round(lerp(s0, s1, seg(t, 4.0, 6.8)));
+        const hh = String(Math.floor(s / 3600)).padStart(2, '0'), mm = String(Math.floor(s / 60) % 60).padStart(2, '0'), ss = String(s % 60).padStart(2, '0');
+        clock = `<span class="mono">${hh}:${mm}:${ss} UTC</span>`;
+      }
+      n.innerHTML = `<span class="tag">制作ログから再現</span>${clock}`;
+      n.style.opacity = 1;
+    } else n.style.opacity = 0;
+  }
+
+  // ---- ターミナル ----
+  function termLines(t) {
+    const L = D.term; // [出現秒, クラス, テキスト]
+    return L.filter(l => t >= l[0]).map(l => {
+      const k = seg(t, l[0], l[0] + Math.min(0.25, l[2].length * 0.008));
+      const txt = l[2].slice(0, Math.ceil(l[2].length * k));
+      return `<div class="ln ${l[1]}">${esc(txt) || '&nbsp;'}</div>`;
+    });
+  }
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  function hl(line) {
+    return esc(line).replace(/("[^"]*")|\b(const|return|function)\b|(=&gt;)/g,
+      (m, str, kw, arrow) => str ? `<span class="s">${str}</span>` : `<span class="k">${m}</span>`);
+  }
+
+  function render(t) {
+    if (!D) return;
+    telop(t); note(t);
+    const term = $('#term'), code = $('#code'), prev = $('#prev'), doc = $('#doc'), stage = $('#stage');
+
+    // ---- 0〜2秒：ターミナル＋コード生成を大きく ----
+    // ---- 4〜7秒：エディタ／ターミナル／プレビューに分割 ----
+    const split = ease(seg(t, 3.85, 4.25));
+    // ウィンドウ配置（split=0: 2画面の大表示 / 1: 3分割）
+    box(term, 12, lerp(152, 376, split), lerp(381, 230, split), lerp(186, 332, split));
+    box(code, 12, lerp(348, 152, split), 381, lerp(360, 214, split));
+    box(prev, lerp(405, 250, split), 376, 143, 227);
+    prev.style.opacity = split;
+
+    // ターミナルの内容（下から押し上げる）
+    const lines = termLines(t);
+    const tb = $('#termBody');
+    tb.innerHTML = lines.join('');
+    const over = tb.scrollHeight - tb.clientHeight;
+    tb.scrollTop = Math.max(0, over);
+
+    // エディタ：初版コード（git 3933b0a の index.html）を高速で書き出す
+    const tabs = [['index.html', 0.3], ['menu.html', 4.55], ['README.md', 6.45]].filter(x => t >= x[1]);
+    $('#tabs').innerHTML = tabs.map((x, i) => `<span class="${i === tabs.length - 1 ? 'on' : ''}">${x[0]}</span>`).join('');
+    const cb = $('#codeBody');
+    let src, start, speed;
+    if (t < 4.55) { src = D.code; start = 0.35; speed = 34; }          // index.html（行/秒）
+    else if (t < 6.45) { src = D.menu; start = 4.55; speed = 22; }      // menu.html
+    else { src = D.readme; start = 6.45; speed = 30; }                  // README.md
+    const n = clamp(Math.floor((t - start) * speed), 0, src.length);
+    const vis = src.slice(0, n);
+    const rowsFit = Math.floor((parseFloat(code.style.height) - 52) / 15.75);
+    const first = Math.max(0, vis.length - rowsFit);
+    cb.innerHTML = vis.slice(first).map((l, i) => `<div class="cl"><b>${l[0]}</b>${hl(l[1])}</div>`).join('');
+
+    // プレビュー：テスト時に実際に撮ったスクリーンショット
+    $('#shotB').style.opacity = t >= 5.95 ? 1 : 0;
+
+    // ---- 2〜4秒：指示書 ----
+    const din = out(seg(t, 2.0, 2.25)), dout = ease(seg(t, 3.7, 3.95));
+    doc.style.display = (t >= 2.0 && t < 3.95) ? 'block' : 'none';
+    box(doc, 18, 158, 369, 548);
+    doc.style.transform = `translateX(${(1 - din) * 420 - dout * 420}px)`;
+    document.querySelectorAll('#req li').forEach((li, i) => {
+      const k = out(seg(t, 2.45 + i * 0.18, 2.6 + i * 0.18));
+      li.querySelector('.hl').style.transform = `scaleX(${k})`;
+      li.classList.toggle('on', k > 0.5);
+    });
+
+    // ---- 7〜10秒：プレビュー → 完成アプリ（最大の見せ場） ----
+    // プレビュー枠の位置から、帯の下（0,120,405,600）いっぱいまで広げる
+    // プレビュー枠（本体 143×205 = 405×580 の 0.353倍）から、帯の下（0,140,405,580）へ
+    const pv = { x: 250, y: 376 + 22 };
+    const s0 = 143 / 405;
+    const g = ease(seg(t, 7.0, 7.55));
+    stage.style.display = t >= 6.9 ? 'block' : 'none';
+    stage.style.transform = `translate(${lerp(pv.x, 0, g)}px, ${lerp(pv.y, 140, g)}px) scale(${lerp(s0, 1, g)})`;
+    // 作業画面は外へ逃がす
+    const away = ease(seg(t, 7.0, 7.45));
+    term.style.transform = `translateX(${-away * 420}px)`;
+    code.style.transform = `translateY(${-away * 600}px)`;
+    prev.style.opacity = split * (1 - away);
+
+    // 金額が変わる瞬間のパンチ（アプリ映像そのものは変えず、枠ごと少し寄る）
+    let punch = 0;
+    for (const p of (D.punch || [])) { const d = t - p; if (d >= 0 && d < 0.45) punch = Math.max(punch, d < 0.1 ? out(d / 0.1) : 1 - ease((d - 0.1) / 0.35)); }
+    $('#app').style.transform = `scale(${1 + 0.045 * punch})`;
+  }
+  window.__render = render;
+})();
+</script>
+</body>
+</html>
