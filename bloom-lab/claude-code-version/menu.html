@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOIR COFFEE — メニュー表</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --ink:#0b0b0b; --paper:#f4f2ee; --mute:#5c5a55;
+    --sans:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;
+    --serif:"Times New Roman","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.6;
+    min-height:100vh; display:grid; place-items:center; padding:32px 16px; }
+  .sheet { width:min(560px,100%); border:1px solid var(--ink); padding:40px 28px 28px; }
+  .tag { display:inline-block; border:1px solid currentColor; padding:1px 7px; font-weight:700; letter-spacing:.16em; font-size:11px; }
+  .top { display:flex; justify-content:space-between; font-size:11px; letter-spacing:.14em; color:var(--mute); }
+  h1 { margin:18px 0 0; text-align:center; font-weight:900; letter-spacing:.3em; font-size:clamp(30px,8vw,44px); line-height:1; }
+  .sub { text-align:center; font-family:var(--serif); font-style:italic; color:var(--mute); margin:8px 0 28px; }
+  h2 { font-size:12px; letter-spacing:.3em; margin:24px 0 4px; padding-bottom:8px; border-bottom:2px solid var(--ink); }
+  ul { list-style:none; margin:0; padding:0; }
+  li { padding:12px 0; border-bottom:1px solid #d7d3cb; }
+  .r { display:flex; align-items:baseline; gap:8px; font-weight:800; }
+  .dots { flex:1; border-bottom:1px dotted var(--ink); transform:translateY(-4px); }
+  .en { font-family:var(--serif); font-style:italic; font-weight:400; color:var(--mute); font-size:14px; }
+  .d { margin:2px 0 0; font-size:13px; color:#34322e; }
+  b { font-variant-numeric:tabular-nums; }
+  .foot { margin:28px 0 0; text-align:center; font-size:11px; letter-spacing:.12em; color:var(--mute); }
+  @media print { body { padding:0; } .sheet { border:0; } }
+</style>
+</head>
+<body>
+<main class="sheet">
+  <div class="top"><span>NEW YORK MOOD — VOL.01</span><span class="tag">DEMO</span></div>
+  <h1>NOIR COFFEE</h1>
+  <p class="sub">coffee, in black &amp; white.</p>
+
+  <h2>DRINK ／ ドリンク</h2>
+  <ul>
+    <li><div class="r"><span>ノワール・エスプレッソ</span><span class="dots"></span><b>¥420</b></div><span class="en" lang="en">Noir Espresso</span><p class="d">深煎り豆のダブルショット。短く、濃く、まっすぐな一杯。</p></li>
+    <li><div class="r"><span>モノクロ・ラテ</span><span class="dots"></span><b>¥580</b></div><span class="en" lang="en">Monochrome Latte</span><p class="d">エスプレッソとスチームミルク。白と黒の二層で提供します。</p></li>
+    <li><div class="r"><span>ミッドナイト・コールドブリュー</span><span class="dots"></span><b>¥620</b></div><span class="en" lang="en">Midnight Cold Brew</span><p class="d">時間をかけて水出ししたアイスコーヒー。すっきりとした後味。</p></li>
+  </ul>
+
+  <h2>SWEETS ／ スイーツ</h2>
+  <ul>
+    <li><div class="r"><span>ブラックセサミ・クロワッサン</span><span class="dots"></span><b>¥480</b></div><span class="en" lang="en">Black Sesame Croissant</span><p class="d">黒ごまペーストを折り込んだ、バターの香るクロワッサン。</p></li>
+    <li><div class="r"><span>ダブルチョコ・スコーン</span><span class="dots"></span><b>¥450</b></div><span class="en" lang="en">Double Chocolate Scone</span><p class="d">ココア生地にチョコチャンクを合わせた、ほろっと崩れるスコーン。</p></li>
+    <li><div class="r"><span>ソルト・バニラ・カヌレ</span><span class="dots"></span><b>¥380</b></div><span class="en" lang="en">Salt Vanilla Canelé</span><p class="d">外は香ばしく、中はしっとり。ひとつまみの塩で甘さを締めて。</p></li>
+  </ul>
+
+  <p class="foot">価格はすべて税込・架空のデモ価格です。<br>NOIR COFFEE は BLOOM LAB 制作デモ用の架空店舗です。</p>
+</main>
+</body>
+</html>
