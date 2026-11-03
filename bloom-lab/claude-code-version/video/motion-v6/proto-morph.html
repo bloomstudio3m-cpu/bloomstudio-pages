@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=405">
 <title>motion-v6 prototype: code to UI (video only)</title>
 <!--
-  第6次 試作：7〜9秒「コードからUIへの変形」（2秒）
+  第6次 試作 r2：7〜9秒「コードからUIへの変形」（2秒）
   動画撮影専用のシーン。アプリ本体ではない。
   - エディタのコードは git 3933b0a（初回コミット）の index.html の実際の行（行番号も実物）
   - 変形先は ../../index.html を iframe で読み込んだ実物のアプリの要素位置（毎回その場で計測）
+  - 色：制作レイヤーだけにアクセント（シグナルオレンジ）を1色。実物のアプリが現れた時点で画面から消え、アプリ本来のモノクロになる
   - 描画は window.__render(t) で秒数から決定的に行う。外部ライブラリは使っていない
 -->
 <style>
   :root {
-    --ink: #0b0b0b; --paper: #f4f2ee; --silver: #b9bdc2; --silver-hi: #eef0f2; --mute: #6d6b66;
+    --ink: #0b0b0b; --paper: #f4f2ee; --silver: #b9bdc2; --mute: #6d6b66;
+    --acc: #ff5b14;
     --sans: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
     --serif: "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     --mono: "DejaVu Sans Mono", Menlo, Consolas, monospace;
@@ -21,15 +23,11 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; width: 405px; height: 720px; overflow: hidden; background: var(--ink); }
   #world { position: absolute; inset: 0; perspective: 820px; perspective-origin: 50% 42%; overflow: hidden; }
-
-  /* 奥の精密グリッド（パララックス） */
   #grid { position: absolute; left: -60px; top: -60px; width: 525px; height: 840px;
     background-image: linear-gradient(#ffffff10 1px, transparent 1px), linear-gradient(90deg, #ffffff10 1px, transparent 1px);
     background-size: 45px 45px; }
 
-  /* エディタ（3Dレイヤー） */
-  #editor { position: absolute; left: 20px; top: 96px; width: 365px; height: 540px; transform-style: preserve-3d;
-    transform-origin: 30% 50%; }
+  #editor { position: absolute; left: 20px; top: 96px; width: 365px; height: 540px; transform-style: preserve-3d; transform-origin: 30% 50%; }
   #editor .panel { position: absolute; inset: 0; background: #111110; border: 1px solid #2c2c2a; border-radius: 8px; }
   #editor .bar { position: absolute; left: 0; right: 0; top: 0; height: 24px; border-bottom: 1px solid #2c2c2a;
     font: 10px var(--mono); color: #77746e; display: flex; align-items: center; gap: 6px; padding: 0 10px; transform: translateZ(1px); }
@@ -39,40 +37,35 @@
   .row { display: flex; font: 10.5px/15.5px var(--mono); color: #cfccc4; transform-style: preserve-3d; padding-right: 10px; }
   .row b { flex: none; width: 34px; text-align: right; padding-right: 10px; color: #4f4d49; font-weight: 400; }
   .row .c { white-space: pre-wrap; word-break: break-all; flex: 1; }
-  .row.gap .c { color: #4f4d49; }
-  .tok { position: relative; color: var(--silver-hi); }
-  .tok .u { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--silver); transform-origin: left; }
+  .tok { position: relative; color: var(--acc); font-weight: 700; }
+  .tok .u { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--acc); transform-origin: left; }
 
-  /* 完成アプリのレイヤー（手前・正対） */
   #plane { position: absolute; left: 0; top: 0; width: 405px; height: 720px; transform-origin: 50% 50%; }
   #app { position: absolute; inset: 0; width: 405px; height: 720px; border: 0; background: var(--paper); }
   #build { position: absolute; inset: 0; pointer-events: none; }
-  .gl { position: absolute; background: var(--silver); opacity: .55; }
+  .gl { position: absolute; background: var(--acc); }
   .card-fill { position: absolute; background: var(--paper); }
-  .edge { position: absolute; background: var(--silver); }
+  .edge { position: absolute; }
   .art-box { position: absolute; overflow: hidden; }
   .art-box svg { width: 100%; height: 100%; display: block; }
-  .art-outline { position: absolute; border: 1px solid var(--silver); }
   .stat { position: absolute; font: 500 11px var(--sans); color: var(--mute); white-space: nowrap; }
-  .no { position: absolute; font: 700 12px var(--sans); letter-spacing: .16em; color: #f4f2ee; }
+  .lbl { position: absolute; font: 700 12px var(--sans); letter-spacing: .16em; color: var(--ink); }
+  .tick { position: absolute; height: 3px; background: var(--acc); transform-origin: left; }
 
-  /* 飛んでいくトークン（画面座標） */
-  .fly { position: absolute; transform-origin: 0 0; white-space: nowrap; }
+  .fly { position: absolute; transform-origin: 0 50%; white-space: nowrap; }
   .fly .m, .fly .s { position: absolute; left: 0; top: 0; }
-  .fly .m { font-family: var(--mono); color: var(--silver-hi); }
+  .fly .m { font-family: var(--mono); color: var(--acc); font-weight: 700; }
   .fly .s { color: var(--ink); }
-  .fly .scan { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--silver-hi); box-shadow: 0 0 0 1px #0b0b0b22; }
+  .fly .scan { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--acc); }
   .fly.btn .s { background: var(--ink); color: var(--paper); font-weight: 700; letter-spacing: .06em; display: flex; align-items: center; justify-content: center; }
   .fly.desc { white-space: normal; }
+  .fly.art { border: 2px solid var(--acc); }
 
-  /* キネティックタイポ */
-  #kin { position: absolute; left: 0; width: 405px; top: 132px; height: 118px; overflow: hidden; }
-  #kin .slab { position: absolute; inset: 0; background: var(--ink); transform-origin: left; }
-  #kin .word { position: absolute; left: 22px; top: 14px; display: flex; font: 900 96px/1 var(--sans); letter-spacing: -.04em; }
-  #kin .word span { display: block; overflow: hidden; height: 92px; }
-  #kin .word span i { display: block; font-style: normal;
-    background: linear-gradient(180deg, #f4f5f6 0%, #c9ccd0 55%, #8d9196 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #kin .meta { position: absolute; right: 18px; bottom: 12px; font: 700 10px var(--mono); letter-spacing: .2em; color: var(--silver); }
+  #ready { position: absolute; left: 16px; top: 64px; height: 30px; display: flex; align-items: center; gap: 9px;
+    padding: 0 12px 0 10px; background: var(--ink); color: var(--paper); }
+  #ready .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+  #ready b { font: 900 14px var(--sans); letter-spacing: .22em; }
+  #ready span { font: 700 9px var(--mono); letter-spacing: .12em; color: var(--silver); }
 </style>
 </head>
 <body>
@@ -84,11 +77,12 @@
     <div id="build"></div>
   </div>
   <div id="flies"></div>
-  <div id="kin"><div class="slab"></div><div class="word"></div><div class="meta">ALL TESTS PASSED · 32/32</div></div>
+  <div id="ready"><i class="dot"></i><b>READY</b><span>32/32 TESTS PASSED</span></div>
 </div>
 <script>
 (() => {
   const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
   const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
   const seg = (t, a, b) => clamp((t - a) / (b - a));
   const lerp = (a, b, k) => a + (b - a) * k;
@@ -96,15 +90,24 @@
   const io4 = k => k < .5 ? 8 * k * k * k * k : 1 - Math.pow(-2 * k + 2, 4) / 2;
   const oExpo = k => k >= 1 ? 1 : 1 - Math.pow(2, -10 * k);
   const o3 = k => 1 - Math.pow(1 - k, 3);
+  const oBack = k => { const c = 1.6; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const mix = (a, b, k) => { // 色の補間（アクセント→墨）
+    const h = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+    const A = h(a), B = h(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], k))).join(',')})`;
+  };
+  const ACC = '#ff5b14', INK = '#0b0b0b';
 
   let D = null, T = null, ready = false;
-  const app = () => $('#app').contentDocument;
+  // 文字の5要素が先に本文へ着地し、最後に絵が描き上がる（文字が絵の上を横切らない）
+  const ORDER = ['name', 'en', 'desc', 'price', 'btn', 'art'];
+  // 出発時刻と飛行時間：0.1秒ずつずらし、空中にいるのは同時に3つまで
+  const T0 = i => i < 5 ? 0.10 + i * 0.10 : 0.58;
+  const DUR = k => k === 'art' ? 0.24 : 0.32;
+  const land = k => T0(ORDER.indexOf(k)) + DUR(k);
 
-  // build-proto.js から実データを受け取る
   window.__setup = async (data) => {
     D = data;
-    // エディタ：実際の行。トークンにする部分だけ <span class="tok"> で包む
     const tokHTML = (text, line) => {
       let h = esc(text);
       for (const tk of D.tokens.filter(x => x.line === line)) {
@@ -114,181 +117,198 @@
       return h;
     };
     $('#lines').innerHTML = D.rows.map(([n, text]) => n === '…'
-      ? `<div class="row gap"><b>⋮</b><span class="c"> </span></div>`
+      ? `<div class="row"><b>⋮</b><span class="c"> </span></div>`
       : `<div class="row"><b>${n}</b><span class="c">${tokHTML(text, n)}</span></div>`).join('');
-    $('#kin .word').innerHTML = 'READY'.split('').map(c => `<span><i>${c}</i></span>`).join('');
 
-    // 実物のアプリを読み込み、ラテのカードが画面上部に来る位置へスクロール
     await new Promise(r => { $('#app').onload = r; $('#app').src = D.appUrl; });
-    await new Promise(r => setTimeout(r, 1400)); // アプリ側の読み込みアニメーションの終了を待つ
-    const w = $('#app').contentWindow, d = app();
-    const card = d.querySelector('#grid [data-id="c2"]');
-    w.scrollTo({ top: card.getBoundingClientRect().top + w.scrollY - 92, behavior: 'instant' });
+    await new Promise(r => setTimeout(r, 1400));
+    const w = $('#app').contentWindow, d = $('#app').contentDocument;
+    const card = d.querySelector('#grid [data-id="c1"]');
+    w.scrollTo({ top: card.getBoundingClientRect().top + w.scrollY - 104, behavior: 'instant' });
     await new Promise(r => setTimeout(r, 200));
     const R = el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; };
-    const nameEl = card.querySelector('.name');
-    const range = d.createRange(); range.setStart(nameEl.firstChild, 0); range.setEnd(nameEl.lastChild.previousSibling || nameEl.firstChild, (nameEl.lastChild.previousSibling || nameEl.firstChild).length || 0);
-    const nameRects = [...range.getClientRects()];
-    const nb = nameRects.reduce((a, b) => ({ x: Math.min(a.x, b.left), y: Math.min(a.y, b.top), r: Math.max(a.r, b.right), b: Math.max(a.b, b.bottom) }), { x: 1e9, y: 1e9, r: -1e9, b: -1e9 });
+    const fs = el => parseFloat(w.getComputedStyle(el).fontSize);
+    const nameEl = card.querySelector('.name'), enEl = nameEl.querySelector('.en');
+    const rg = d.createRange(); rg.setStartBefore(nameEl.firstChild); rg.setEndBefore(enEl);
+    const nb = rg.getBoundingClientRect();
     const priceEl = card.querySelector('.price');
-    const pr = d.createRange(); pr.selectNodeContents(priceEl); pr.setEnd(priceEl.firstChild, priceEl.firstChild.length);
+    const pr = d.createRange(); pr.setStart(priceEl.firstChild, 0); pr.setEnd(priceEl.firstChild, priceEl.firstChild.length);
     const pb = pr.getBoundingClientRect();
-    const cs = el => getComputedStyle.call(w, el);
     T = {
       card: R(card), art: R(card.querySelector('.art')),
-      name: { x: nb.x, y: nb.y, w: nb.r - nb.x, h: nb.b - nb.y, fs: parseFloat(w.getComputedStyle(nameEl).fontSize) },
-      en: { ...R(card.querySelector('.en')), fs: parseFloat(w.getComputedStyle(card.querySelector('.en')).fontSize) },
-      desc: { ...R(card.querySelector('.desc')), fs: parseFloat(w.getComputedStyle(card.querySelector('.desc')).fontSize) },
-      price: { x: pb.left, y: pb.top, w: pb.width, h: pb.height, fs: parseFloat(w.getComputedStyle(priceEl).fontSize) },
+      name: { x: nb.left, y: nb.top, w: nb.width, h: nb.height, fs: fs(nameEl) },
+      en: { ...R(enEl), fs: fs(enEl) },
+      desc: { ...R(card.querySelector('.desc')), fs: fs(card.querySelector('.desc')) },
+      price: { x: pb.left, y: pb.top, w: pb.width, h: pb.height, fs: fs(priceEl) },
       small: R(priceEl.querySelector('small')),
-      btn: R(card.querySelector('[data-add="c2"]')),
+      btn: R(card.querySelector('[data-add="c1"]')),
       no: R(card.querySelector('.art .no')), cat: R(card.querySelector('.art .cat')),
     };
     buildOverlay();
     ready = true;
   };
 
-  // 組み上がり途中のカード（アプリのレイヤーと同じ座標系）
   function buildOverlay() {
     const c = T.card, a = T.art;
     $('#build').innerHTML = `
       <div class="gl" id="g1"></div><div class="gl" id="g2"></div><div class="gl" id="g3"></div><div class="gl" id="g4"></div>
       <div class="card-fill" id="fill" style="left:${c.x}px;top:${a.y + a.h}px;width:${c.w}px;height:${c.y + c.h - a.y - a.h}px"></div>
-      <div class="art-outline" id="artOut"></div>
       <div class="art-box" id="artBox" style="left:${a.x}px;top:${a.y}px;width:${a.w}px;height:${a.h}px">${D.artSvg}</div>
-      <div class="no" id="noLbl" style="left:${T.no.x}px;top:${T.no.y}px">No.02</div><div class="no" id="catLbl" style="left:${T.cat.x}px;top:${T.cat.y}px;font-weight:400;font-size:11px">DRINK</div>
+      <div class="lbl" id="noLbl" style="left:${T.no.x}px;top:${T.no.y}px">No.01</div>
+      <div class="lbl" id="catLbl" style="left:${T.cat.x}px;top:${T.cat.y}px;font-weight:400;font-size:11px">DRINK</div>
       <div class="stat" id="small" style="left:${T.small.x}px;top:${T.small.y}px">税込</div>
-      <div class="edge" id="eT"></div><div class="edge" id="eL"></div><div class="edge" id="eB"></div><div class="edge" id="eR"></div>
-      <div class="edge" id="eA"></div>`;
-    const specs = [
-      ['name', 'モノクロ・ラテ', `font-weight:800;letter-spacing:.01em`],
-      ['en', 'Monochrome Latte', `font-family:var(--serif);font-style:italic;color:#5c5a55`],
-      ['desc', 'エスプレッソとスチームミルク。白と黒の二層で提供します。', `color:#34322e;line-height:1.6`],
-      ['price', '¥580', `font-weight:800;letter-spacing:.02em`],
-      ['art', '', ''],
-      ['btn', '追加 ＋', ''],
-    ];
-    $('#flies').innerHTML = specs.map(([k, s, st]) => {
+      <div class="edge" id="eT"></div><div class="edge" id="eL"></div><div class="edge" id="eB"></div><div class="edge" id="eR"></div><div class="edge" id="eA"></div>
+      ${ORDER.map(k => `<div class="tick" id="tk-${k}"></div>`).join('')}`;
+    // 絵のSVG：描き順をつけるため、要素ごとに準備する（中身は実際のSVGのまま）
+    const svg = $('#artBox svg');
+    [...svg.children].forEach((el, i) => {
+      el.dataset.i = i;
+      if (el.getAttribute('fill') === 'none') { el.setAttribute('pathLength', '1'); el.style.strokeDasharray = '1'; }
+      el.style.transformBox = 'fill-box';
+    });
+    const specs = {
+      name: ['ノワール・エスプレッソ', `font-weight:800;letter-spacing:.01em`],
+      en: ['Noir Espresso', `font-family:var(--serif);font-style:italic;color:#5c5a55`],
+      desc: ['深煎り豆のダブルショット。短く、濃く、まっすぐな一杯。', `color:#34322e;line-height:1.6`],
+      price: ['¥420', `font-weight:800;letter-spacing:.02em`],
+      art: ['', ''], btn: ['追加 ＋', ''],
+    };
+    $('#flies').innerHTML = ORDER.map(k => {
       const src = D.tokens.find(x => x.key === k).src;
-      return `<div class="fly ${k === 'btn' ? 'btn' : ''} ${k === 'desc' ? 'desc' : ''}" data-k="${k}">
-        <div class="m">${esc(src)}</div><div class="s" style="font-family:var(--sans);${st}">${s}</div><div class="scan"></div></div>`;
+      return `<div class="fly ${k}" data-k="${k}"><div class="m">${esc(src)}</div><div class="s" style="font-family:var(--sans);${specs[k][1]}">${specs[k][0]}</div><div class="scan"></div></div>`;
     }).join('');
   }
 
-  // アプリのレイヤーのカメラ：縮小 → 実寸
-  const planeS = t => lerp(0.86, 1, oExpo(seg(t, 0.95, 1.45)));
-  const planeY = t => lerp(10, 0, io3(seg(t, 0.95, 1.4)));
+  const planeS = t => lerp(0.86, 1, oExpo(seg(t, 1.04, 1.52)));
+  const planeY = t => lerp(10, 0, io3(seg(t, 1.04, 1.47)));
   const toScreen = (r, t) => { const s = planeS(t), cx = 202.5, cy = 360, dy = planeY(t);
     return { x: cx + (r.x - cx) * s, y: cy + (r.y - cy) * s + dy, w: r.w * s, h: r.h * s, s }; };
-
-  const toScreenLocal = r => r; // artOut は #build（アプリのレイヤー内）にあるので、レイヤー座標のまま
   const box = (el, r) => Object.assign(el.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
 
   window.__render = t => {
     if (!ready) return;
-    // ---- 奥のグリッド：カメラと逆方向にわずかに流れる（パララックス）
     $('#grid').style.transform = `translate(${lerp(0, -18, io3(seg(t, 0, 2)))}px, ${lerp(0, -30, io3(seg(t, 0, 2)))}px)`;
 
-    // ---- エディタ：奥へ退きながら、コード行が奥行き方向に分解していく
+    // ---- エディタ：奥へ退きながら、コード行が奥行き方向に分解
     const er = io3(seg(t, 0.1, 1.0));
     const ed = $('#editor');
     ed.style.transform = `translateX(${lerp(0, -70, er)}px) translateZ(${lerp(0, -760, er)}px) rotateY(${lerp(-12, -46, er)}deg) rotateX(${lerp(4, 10, er)}deg)`;
     ed.style.opacity = 1 - seg(t, 0.85, 1.2);
-    document.querySelectorAll('#lines .row').forEach((row, i) => {
+    $$('#lines .row').forEach((row, i) => {
       const z = -(((i * 37) % 7) * 70 + 40) * er, x = (((i * 53) % 5) - 2) * 22 * er;
       row.style.transform = `translate3d(${x}px, 0, ${z}px)`;
       row.style.opacity = 1 - 0.6 * er;
     });
-    document.querySelectorAll('#lines .tok').forEach((tk, i) => {
-      tk.querySelector('.u').style.transform = `scaleX(${o3(seg(t, 0.0 + i * 0.025, 0.16 + i * 0.025))})`;
+    ORDER.forEach((k, i) => {
+      const u = document.querySelector(`#lines .tok[data-k="${k}"] .u`);
+      u.style.transform = `scaleX(${o3(seg(t, T0(i) - 0.1, T0(i)))})`;
     });
 
-    // ---- アプリのレイヤー
-    const s = planeS(t);
-    $('#plane').style.transform = `translateY(${planeY(t)}px) scale(${s})`;
-
-    // 実物のアプリをマスクで開く：ラテのカードの矩形から全画面へ
-    const rv = io4(seg(t, 1.0, 1.38));
-    const c = T.card;
+    // ---- アプリのレイヤーとマスク
+    $('#plane').style.transform = `translateY(${planeY(t)}px) scale(${planeS(t)})`;
+    const c = T.card, a = T.art;
+    const RV0 = 1.06, RV1 = 1.42;
+    const rv = io4(seg(t, RV0, RV1));
     const ins = [lerp(c.y, 0, rv), lerp(405 - c.x - c.w, 0, rv), lerp(720 - c.y - c.h, 0, rv), lerp(c.x, 0, rv)];
-    $('#app').style.clipPath = t < 1.0 ? 'inset(50% 50% 50% 50%)' : `inset(${ins[0]}px ${ins[1]}px ${ins[2]}px ${ins[3]}px)`;
-    $('#app').style.visibility = t < 1.0 ? 'hidden' : 'visible';
-    $('#build').style.visibility = t < 1.0 ? 'visible' : 'hidden';
-    $('#flies').style.visibility = t < 1.0 ? 'visible' : 'hidden';
+    const live = t >= RV0;
+    $('#app').style.visibility = live ? 'visible' : 'hidden';
+    $('#app').style.clipPath = `inset(${ins[0]}px ${ins[1]}px ${ins[2]}px ${ins[3]}px)`;
+    $('#build').style.visibility = live ? 'hidden' : 'visible';
+    $('#flies').style.visibility = live ? 'hidden' : 'visible';
 
-    // 組み上げ：精密なガイド線 → 紙の面 → 黒い縁
-    const g = o3(seg(t, 0.16, 0.5)), gOut = 1 - seg(t, 0.75, 0.98);
+    // ガイド線（アクセント）→ 着地前に引いていく
+    const g = o3(seg(t, 0.06, 0.36)), gOut = 1 - seg(t, 0.86, 1.02);
     box($('#g1'), { x: 0, y: c.y, w: 405 * g, h: 1 }); box($('#g2'), { x: 405 - 405 * g, y: c.y + c.h, w: 405 * g, h: 1 });
     box($('#g3'), { x: c.x, y: 0, w: 1, h: 720 * g }); box($('#g4'), { x: c.x + c.w, y: 720 - 720 * g, w: 1, h: 720 * g });
-    ['#g1', '#g2', '#g3', '#g4'].forEach(id => $(id).style.opacity = 0.55 * gOut);
-    const f = io3(seg(t, 0.3, 0.55));
-    $('#fill').style.clipPath = `inset(0 0 ${(1 - f) * 100}% 0)`;
-    const e = o3(seg(t, 0.3, 0.62));
-    box($('#eT'), { x: c.x, y: c.y, w: c.w * e, h: 1 }); box($('#eL'), { x: c.x, y: c.y, w: 1, h: c.h * e });
-    box($('#eB'), { x: c.x + c.w - c.w * e, y: c.y + c.h - 1, w: c.w * e, h: 1 }); box($('#eR'), { x: c.x + c.w - 1, y: c.y + c.h - c.h * e, w: 1, h: c.h * e });
-    box($('#eA'), { x: c.x, y: T.art.y + T.art.h - 1, w: c.w * o3(seg(t, 0.55, 0.8)), h: 1 });
-    // 絵：トークンが枠になって着地 → 下から塗り上がる
-    const artK = io3(seg(t, 0.42, 0.64));
-    $('#artBox').style.clipPath = `inset(${(1 - artK) * 100}% 0 0 0)`;
-    $('#noLbl').style.clipPath = `inset(0 ${(1 - o3(seg(t, 0.6, 0.75))) * 100}% 0 0)`;
-    $('#catLbl').style.clipPath = `inset(0 0 0 ${(1 - o3(seg(t, 0.64, 0.8))) * 100}%)`;
-    $('#small').style.clipPath = `inset(0 ${(1 - o3(seg(t, 0.72, 0.9))) * 100}% 0 0)`;
+    ['#g1', '#g2', '#g3', '#g4'].forEach(id => $(id).style.opacity = 0.5 * gOut);
+    // カードの縁：アクセントで描き、本物に入れ替わる直前に墨色へ
+    const e = o3(seg(t, 0.12, 0.42)), ec = mix(ACC, INK, seg(t, 0.88, 1.04));
+    box($('#eT'), { x: c.x, y: c.y, w: c.w * e, h: 1.5 }); box($('#eL'), { x: c.x, y: c.y, w: 1.5, h: c.h * e });
+    box($('#eB'), { x: c.x + c.w - c.w * e, y: c.y + c.h - 1.5, w: c.w * e, h: 1.5 }); box($('#eR'), { x: c.x + c.w - 1.5, y: c.y + c.h - c.h * e, w: 1.5, h: c.h * e });
+    box($('#eA'), { x: c.x, y: a.y + a.h - 1, w: c.w * o3(seg(t, 0.2, 0.42)), h: 1 });
+    ['#eT', '#eL', '#eB', '#eR', '#eA'].forEach(id => $(id).style.background = ec);
+    // 本文の面
+    $('#fill').style.clipPath = `inset(0 0 ${(1 - io3(seg(t, 0.2, 0.4))) * 100}% 0)`;
 
-    // ---- トークンの飛行（画面座標）
-    const order = ['art', 'name', 'en', 'desc', 'price', 'btn'];
-    order.forEach((k, i) => {
+    // ---- 絵：描き順で完成させる（灰色の面の時間をつくらない）
+    const svg = $('#artBox svg');
+    const kids = [...svg.children];
+    const LA = land('art');
+    // 0 背景 → 1 円（線） → 2 カップ（下から満ちる） → 3 取っ手（線） → 4 ソーサー（中央から伸びる）
+    const sched = [[LA - 0.05, LA + 0.05], [LA - 0.01, LA + 0.15], [LA + 0.03, LA + 0.14], [LA + 0.08, LA + 0.18], [LA + 0.09, LA + 0.18]];
+    kids.forEach((el, i) => {
+      const [s0, s1] = sched[Math.min(i, sched.length - 1)];
+      const k = io3(seg(t, s0, s1));
+      if (i === 0) { $('#artBox').style.clipPath = `inset(0 ${(1 - k) * 100}% 0 0)`; return; }
+      if (el.getAttribute('fill') === 'none') { el.style.strokeDashoffset = String(1 - k); return; }
+      if (i === 2) { el.style.transformOrigin = '50% 100%'; el.style.transform = `scaleY(${k})`; return; }
+      el.style.transformOrigin = '50% 50%'; el.style.transform = `scaleX(${k})`;
+    });
+    $('#noLbl').style.clipPath = `inset(0 ${(1 - o3(seg(t, LA + 0.12, LA + 0.24))) * 100}% 0 0)`;
+    $('#catLbl').style.clipPath = `inset(0 0 0 ${(1 - o3(seg(t, LA + 0.14, LA + 0.26))) * 100}%)`;
+    $('#small').style.clipPath = `inset(0 ${(1 - o3(seg(t, land('price'), land('price') + 0.12))) * 100}% 0 0)`;
+
+    // ---- 6つの値の飛行
+    ORDER.forEach((k, i) => {
       const fl = document.querySelector(`.fly[data-k="${k}"]`);
       const src = document.querySelector(`#lines .tok[data-k="${k}"]`);
-      const t0 = 0.12 + i * 0.05, dur = k === 'art' ? 0.36 : 0.48;
+      const t0 = T0(i), dur = DUR(k);
       const kk = seg(t, t0, t0 + dur), q = io3(kk);
+      const tick = $('#tk-' + k);
+      // 着地の合図：着地点の下にアクセントの線が走って消える
+      const tl = seg(t, t0 + dur - 0.02, t0 + dur + 0.16);
+      const tg = T[k];
+      if (k !== 'art') {
+        box(tick, { x: tg.x, y: tg.y + tg.h + 1, w: tg.w * o3(clamp(tl * 1.6)), h: 3 });
+        tick.style.opacity = tl > 0 && tl < 1 ? 1 - seg(tl, 0.55, 1) : 0;
+      } else tick.style.opacity = 0;
       if (t < t0) { fl.style.display = 'none'; src.style.visibility = 'visible'; return; }
-      fl.style.display = 'block'; src.style.visibility = 'hidden';
-      const a = src.getBoundingClientRect();
-      const from = { x: a.left, y: a.top, w: a.width, h: a.height };
-      const tgt = toScreen(T[k], t0 + dur);
-      // 弧を描いて手前に浮き上がる
-      const arc = Math.sin(Math.PI * q) * (-34 - i * 6);
-      const pop = 1 + Math.sin(Math.PI * q) * 0.16;
-      const r = { x: lerp(from.x, tgt.x, q), y: lerp(from.y, tgt.y, q) + arc, w: lerp(from.w, tgt.w, q), h: lerp(from.h, tgt.h, q) };
-      const fsFrom = 10.5 * (a.height / 15.5 || 1), fsTo = (T[k].fs || 14) * tgt.s;
+      src.style.visibility = 'hidden';
+      if (kk >= 1) { fl.style.display = k === 'art' ? 'none' : 'block'; }
+      else fl.style.display = 'block';
+      const ab = src.getBoundingClientRect();
+      const from = { x: ab.left, y: ab.top, w: ab.width, h: ab.height };
+      const to = toScreen(tg, t0 + dur);
+      // 軌道：左右交互にふくらむ弧＋手前に浮く。値ごとに高さを変えて重ならないようにする
+      const side = i % 2 ? 1 : -1;
+      const bump = Math.sin(Math.PI * q);
+      const r = {
+        x: lerp(from.x, to.x, q) + side * bump * (18 + i * 5),
+        y: lerp(from.y, to.y, q) - bump * (14 + i * 6),
+        w: lerp(from.w, to.w, q), h: lerp(from.h, to.h, q),
+      };
+      const pop = 1 + bump * 0.18;
       fl.style.left = r.x + 'px'; fl.style.top = r.y + 'px';
-      fl.style.transform = `scale(${pop})`;
+      fl.style.transform = `scale(${kk >= 1 ? 1 : pop})`;
       const m = fl.querySelector('.m'), sv = fl.querySelector('.s'), scan = fl.querySelector('.scan');
-      const fs = lerp(fsFrom, fsTo, q);
-      m.style.fontSize = sv.style.fontSize = fs + 'px';
-      if (k === 'desc') { sv.style.width = r.w + 'px'; m.style.width = r.w + 'px'; m.style.whiteSpace = 'normal'; }
-      if (k === 'btn') { sv.style.width = r.w + 'px'; sv.style.height = r.h + 'px'; sv.style.fontSize = (14 * tgt.s) + 'px'; }
       if (k === 'art') {
-        // 絵のトークン：文字のまま着地せず、銀の枠に展開して絵の領域になる
-        const out = $('#artOut'); const ta = T.art;
-        fl.querySelector('.m').style.opacity = 1 - seg(q, 0.3, 0.6);
+        // 「espresso」の文字が、アクセントの枠に広がって絵の領域になる
         fl.style.width = r.w + 'px'; fl.style.height = r.h + 'px';
-        fl.style.border = `1px solid rgba(185,189,194,${seg(q, 0.15, 0.4)})`;
-        fl.style.display = kk >= 1 ? 'none' : 'block';
-        box(out, toScreenLocal(ta)); out.style.opacity = kk >= 1 ? 1 - seg(t, 0.62, 0.8) : 0;
-        scan.style.display = 'none';
+        m.style.fontSize = lerp(10.5, 22, q) + 'px'; m.style.opacity = 1 - seg(q, 0.45, 0.8);
+        m.style.left = '8px'; m.style.top = '6px';
+        scan.style.display = 'none'; sv.style.display = 'none';
         return;
       }
-      // 書体のモーフ：等幅の文字を、スキャンラインが左から右へサンセリフに書き換える
-      const wk = io3(seg(q, 0.42, 0.78));
-      m.style.clipPath = `inset(-4px -4px -4px ${wk * 100}%)`;
-      sv.style.clipPath = `inset(-4px ${(1 - wk) * 100}% -4px -4px)`;
+      const fsFrom = 10.5 * (ab.height / 15.5 || 1), fsTo = tg.fs * to.s;
+      const f = lerp(fsFrom, fsTo, q);
+      m.style.fontSize = sv.style.fontSize = f + 'px';
+      if (k === 'desc') { sv.style.width = r.w + 'px'; m.style.width = r.w + 'px'; m.style.whiteSpace = 'normal'; }
+      if (k === 'btn') { sv.style.width = to.w + 'px'; sv.style.height = to.h + 'px'; sv.style.fontSize = (14 * to.s) + 'px'; }
+      // 書体のモーフ：アクセントのスキャンラインが、等幅のコードをサンセリフのUIに書き換える
+      const wk = io3(seg(q, 0.45, 0.85));
+      m.style.clipPath = `inset(-6px -6px -6px ${wk * 100}%)`;
+      sv.style.clipPath = `inset(-6px ${(1 - wk) * 100}% -6px -6px)`;
       const sw = Math.max(m.offsetWidth, sv.offsetWidth);
       scan.style.left = (wk * sw) + 'px';
       scan.style.opacity = wk > 0 && wk < 1 ? 1 : 0;
-      fl.style.transform = `scale(${pop})`;
     });
 
-    // ---- キネティックタイポ「READY」
-    const kin = $('#kin');
-    const sl = io4(seg(t, 1.26, 1.46));
-    kin.style.visibility = t >= 1.26 ? 'visible' : 'hidden';
-    kin.querySelector('.slab').style.transform = `scaleX(${sl})`;
-    kin.querySelectorAll('.word span i').forEach((ch, i) => {
-      const k = o3(seg(t, 1.36 + i * 0.045, 1.62 + i * 0.045));
-      ch.style.transform = `translateY(${(1 - k) * 100}%)`;
-    });
-    kin.querySelector('.meta').style.clipPath = `inset(0 0 0 ${(1 - o3(seg(t, 1.6, 1.85))) * 100}%)`;
+    // ---- READY：小さなバッジに。完成アプリが主役
+    const rd = $('#ready');
+    const rk = oBack(seg(t, 1.36, 1.56));
+    rd.style.visibility = t >= 1.36 ? 'visible' : 'hidden';
+    rd.style.clipPath = `inset(0 ${(1 - clamp(rk)) * 100}% 0 0)`;
+    rd.style.transform = `translateY(${(1 - clamp(rk)) * -6}px)`;
   };
 })();
 </script>

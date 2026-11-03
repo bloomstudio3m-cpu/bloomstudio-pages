@@ -28,15 +28,15 @@ const ROWS = [
   ...[599, 600, 601, 602, 603, 604].map(n => [n, cut(L(n))]),
 ];
 const TOKENS = [
-  { key: 'name', line: 511, src: 'モノクロ・ラテ' },
-  { key: 'en', line: 511, src: 'Monochrome Latte' },
-  { key: 'desc', line: 512, src: 'エスプレッソとスチームミルク。白と黒の二層で提供します。' },
-  { key: 'price', line: 511, src: '580' },
-  { key: 'art', line: 525, src: 'latte' },
+  { key: 'name', line: 509, src: 'ノワール・エスプレッソ' },
+  { key: 'en', line: 509, src: 'Noir Espresso' },
+  { key: 'desc', line: 510, src: '深煎り豆のダブルショット。短く、濃く、まっすぐな一杯。' },
+  { key: 'price', line: 509, src: '420' },
+  { key: 'art', line: 524, src: 'espresso' },
   { key: 'btn', line: 603, src: 'class="add"' },
 ];
 for (const t of TOKENS) if (!cut(L(t.line)).includes(t.src)) throw new Error(`token ${t.key} not on line ${t.line}`);
-const artSvg = L(525).match(/`(<svg[\s\S]*?<\/svg>)`/)[1];
+const artSvg = L(524).match(/`(<svg[\s\S]*?<\/svg>)`/)[1];
 
 (async () => {
   const server = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1', '--directory', ROOT], { stdio: 'ignore' });
