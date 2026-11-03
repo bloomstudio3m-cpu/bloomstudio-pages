@@ -13,8 +13,7 @@ BLOOM LAB｜AI BUILD BATTLE 用の、架空カフェの注文デモWebアプリ�
 | `menu.html` | 静的メニュー表（アプリと同じデザイン。印刷にも対応） |
 | `screenshots/` | スマホ（390px）・PC（1440px）のスクリーンショット |
 | `tests.e2e.js` | Playwrightを使った動作確認スクリプト（68項目） |
-| `record-video.js` | 15秒の操作動画を録画するスクリプト |
-| `video/noir-coffee-claude-code-15s.mp4` | 15秒の操作動画（780×1688、H.264、30fps） |
+| `video/` | SNS用の15秒動画・比較用素材・書き出しスクリプト（詳細は `video/README.md`） |
 | `REVIEW_01.md` | D第1次審査への回答（実機検証・アクセシビリティ・修正内容） |
 
 ## 起動方法
