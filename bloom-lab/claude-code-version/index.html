@@ -34,6 +34,7 @@
   button { font: inherit; color: inherit; cursor: pointer; }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   .inverse :focus-visible, .inverse:focus-visible { outline-color: var(--paper); }
+  h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus { outline: none; }
   .sr-only {
     position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -202,6 +203,7 @@
     position: absolute; right: 14px; top: 10px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
   }
   .body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .name, .line .ln, .sheet li > span:first-child { word-break: keep-all; overflow-wrap: anywhere; line-break: strict; }
   .name { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 800; letter-spacing: .01em; text-wrap: balance; }
   .name .en { display: block; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 15px; color: var(--mute); }
   .desc { margin: 0; font-size: 14px; color: #34322e; flex: 1; }
@@ -295,6 +297,8 @@
     border: 1px solid var(--ink); padding: 0; background: var(--paper); color: var(--ink);
     width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px);
   }
+  html:has(dialog[open]) { overflow: hidden; }
+  dialog { overscroll-behavior: contain; }
   dialog::backdrop { background: rgba(11,11,11,.6); }
   dialog[open] { animation: pop .3s var(--ease); }
   @keyframes pop { from { opacity: 0; transform: translateY(16px); } }
@@ -434,7 +438,7 @@
       <span>Fictional cafe — Vol.01</span>
       <span>Black / White / Brew</span>
     </div>
-    <h1 id="heroTitle" class="word" aria-label="NOIR COFFEE">
+    <h1 id="heroTitle" class="word" aria-label="NOIR COFFEE" tabindex="-1">
       <span class="ch" aria-hidden="true"><span>N</span></span><span class="ch" aria-hidden="true"><span>O</span></span><span class="ch" aria-hidden="true"><span>I</span></span><span class="ch" aria-hidden="true"><span>R</span></span>
     </h1>
     <p class="word-sub" aria-hidden="true">coffee, in black &amp; white.</p>
@@ -493,9 +497,10 @@
 
 <dialog id="dlg" aria-labelledby="dlgTitle">
   <div class="dlg" id="dlgInner"></div>
+  <div class="sr-only" id="dlgLive" aria-live="polite" aria-atomic="true"></div>
 </dialog>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast" aria-hidden="true"></div>
 <div class="sr-only" id="live" aria-live="polite" aria-atomic="true"></div>
 
 <script>
@@ -529,6 +534,8 @@
     canele: `<svg viewBox="0 0 400 300" aria-hidden="true"><rect width="400" height="300" fill="#e9e6df"/><path d="M150 230l10-130h80l10 130z" fill="#0b0b0b"/><g stroke="#e9e6df" stroke-width="3"><path d="M175 108l-4 120"/><path d="M200 104v126"/><path d="M225 108l4 120"/></g><ellipse cx="200" cy="100" rx="40" ry="9" fill="#0b0b0b"/><circle cx="300" cy="80" r="28" fill="none" stroke="#0b0b0b" stroke-width="1"/></svg>`,
   };
 
+  // 商品名は「・」の位置でだけ改行させる（単語の途中で折り返さない）
+  const jp = name => name.replace(/・/g, "・<wbr>");
   const yen = n => "¥" + n.toLocaleString("ja-JP");
   const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
   const MAX_QTY = 20;
@@ -574,7 +581,7 @@
           <span class="cat" aria-hidden="true" style="color:${["latte","scone"].includes(i.art) ? "#f4f2ee" : "#0b0b0b"}">${i.cat === "coffee" ? "drink" : "sweets"}</span>
         </div>
         <div class="body">
-          <h3 class="name" id="n-${i.id}">${i.name}<span class="en" lang="en">${i.en}</span></h3>
+          <h3 class="name" id="n-${i.id}">${jp(i.name)}<span class="en" lang="en">${i.en}</span></h3>
           <p class="desc">${i.desc}</p>
           <div class="row">
             <span class="price">${yen(i.price)}<small>税込</small></span>
@@ -631,7 +638,7 @@
     return [...state.cart.entries()].map(([id, q]) => {
       const i = byId[id];
       return `<li class="line">
-        <span class="ln">${i.name}</span>
+        <span class="ln">${jp(i.name)}</span>
         <span class="lt">${yen(i.price * q)}</span>
         <span class="ctrls">
           ${stepperHTML(id, size)}
@@ -769,7 +776,13 @@
   $("#asideReview").addEventListener("click", e => openReview(e.currentTarget));
 
   /* ---------- feedback ---------- */
-  function announce(msg) { live.textContent = ""; requestAnimationFrame(() => { live.textContent = msg; }); }
+  // モーダル表示中は外側が inert になるため、ダイアログ内のライブリージョンを使う
+  function announce(msg) {
+    const target = dlg.open ? $("#dlgLive") : live;
+    (target === live ? $("#dlgLive") : live).textContent = "";
+    target.textContent = "";
+    setTimeout(() => { target.textContent = msg; }, 60);
+  }
   let tId;
   function showToast(msg) {
     toast.textContent = msg; toast.classList.add("show");
@@ -790,10 +803,12 @@
   if (introParam) {
     const groups = [["coffee", "DRINK"], ["pastry", "SWEETS"]];
     $("#introMenu").innerHTML = groups.map(([c, label]) => `<h2>${label}</h2><ul>${
-      ITEMS.filter(i => i.cat === c).map(i => `<li><span>${i.name}</span><span class="dots" aria-hidden="true"></span><b>${yen(i.price)}</b></li>`).join("")
+      ITEMS.filter(i => i.cat === c).map(i => `<li><span>${jp(i.name)}</span><span class="dots" aria-hidden="true"></span><b>${yen(i.price)}</b></li>`).join("")
     }</ul>`).join("");
     intro.hidden = false;
     document.documentElement.style.overflow = "hidden";
+    const behind = [...document.body.children].filter(el => el !== intro && el.tagName !== "SCRIPT");
+    behind.forEach(el => el.inert = true);
     $("#introGo").focus();
     let done = false;
     const open = () => {
@@ -801,10 +816,18 @@
       intro.classList.add("out");
       document.documentElement.style.overflow = "";
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      setTimeout(() => { intro.hidden = true; startApp(); $(".logo").focus({ preventScroll: true }); }, reduce ? 0 : 1300);
+      setTimeout(() => {
+        intro.hidden = true;
+        behind.forEach(el => el.inert = false);
+        startApp();
+        $("#heroTitle").focus({ preventScroll: true });
+      }, reduce ? 0 : 1300);
     };
     $("#introGo").addEventListener("click", open);
-    intro.addEventListener("keydown", e => { if (e.key === "Escape") open(); });
+    intro.addEventListener("keydown", e => {
+      if (e.key === "Escape") open();
+      if (e.key === "Tab") { e.preventDefault(); $("#introGo").focus(); } // 操作できるのはボタン1つなのでそこに留める
+    });
     if (introParam === "auto") setTimeout(open, 2800);
   } else {
     startApp();
