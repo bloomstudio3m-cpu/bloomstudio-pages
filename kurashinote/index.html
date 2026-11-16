@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>くらしの手｜polite living 家事代行・ハウスキーピング</title>
+<meta name="description" content="くらしの手（polite living）は、掃除・料理・洗濯・整理をていねいにお手伝いする家事代行サービスです。初回お試しプランあり。ご予約・ご相談は公式LINEから。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sage:#7C8F7A; --sage-d:#56685A; --sage-l:#E7ECE3;
+    --linen:#F7F3EC; --cream:#FCFAF6; --sand:#E9E1D3;
+    --ink:#3B3832; --sub:#77716A; --line:#E2DACB;
+    --clay:#C69C7B; --line-green:#06C755;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{ background:var(--cream); color:var(--ink); font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif; font-size:16px; line-height:1.95; letter-spacing:.04em; -webkit-font-smoothing:antialiased; }
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; }
+  .mincho{ font-family:"Shippori Mincho","Yu Mincho",serif; }
+  .en{ font-family:"Cormorant Garamond",serif; font-style:italic; letter-spacing:.08em; }
+  .inner{ max-width:1040px; margin:0 auto; padding:0 20px; }
+
+  /* header */
+  header{ position:sticky; top:0; z-index:10; background:rgba(252,250,246,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  header .inner{ display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .logo{ text-decoration:none; display:flex; align-items:baseline; gap:10px; }
+  .logo b{ font-family:"Shippori Mincho",serif; font-size:21px; font-weight:600; letter-spacing:.14em; }
+  .logo span{ font-family:"Cormorant Garamond",serif; font-style:italic; font-size:14px; color:var(--sage-d); letter-spacing:.1em; }
+  nav{ display:flex; gap:22px; font-size:13px; }
+  nav a{ text-decoration:none; color:var(--sub); }
+  nav a:hover{ color:var(--sage-d); }
+  .hbtn{ background:var(--line-green); color:#fff !important; padding:7px 16px; border-radius:30px; font-weight:500; }
+  @media (max-width:760px){ nav a:not(.hbtn){ display:none; } }
+
+  /* hero */
+  .hero{ background:linear-gradient(180deg,var(--linen),var(--cream)); padding:88px 0 96px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before{ content:""; position:absolute; width:520px; height:520px; border-radius:50%; background:var(--sage-l); top:-220px; right:-160px; opacity:.7; }
+  .hero::after{ content:""; position:absolute; width:300px; height:300px; border-radius:50%; background:var(--sand); bottom:-160px; left:-90px; opacity:.6; }
+  .hero .inner{ position:relative; z-index:1; }
+  .hero .en{ color:var(--sage-d); font-size:18px; }
+  .hero h1{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:clamp(30px,6vw,46px); line-height:1.6; letter-spacing:.16em; margin:18px 0 26px; }
+  .hero p{ color:var(--sub); font-size:15px; line-height:2.2; }
+  .btns{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:38px; }
+  .btn{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-weight:500; font-size:15px; padding:15px 32px; border-radius:40px; transition:.2s; }
+  .btn-line{ background:var(--line-green); color:#fff; box-shadow:0 6px 18px rgba(6,199,85,.22); }
+  .btn-line:hover{ transform:translateY(-2px); }
+  .btn-ghost{ border:1px solid var(--sage); color:var(--sage-d); background:#fff; }
+  .btn small{ font-size:11px; opacity:.85; }
+
+  /* section */
+  section{ padding:88px 0; }
+  .sec-title{ text-align:center; margin-bottom:46px; }
+  .sec-title .en{ display:block; color:var(--sage); font-size:17px; }
+  .sec-title h2{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:clamp(22px,4vw,28px); letter-spacing:.14em; margin-top:4px; }
+  .sec-title p{ color:var(--sub); font-size:14px; margin-top:12px; }
+  .bg-linen{ background:var(--linen); }
+
+  /* worries */
+  .worries{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; max-width:820px; margin:0 auto; }
+  .worries li{ list-style:none; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px 18px 46px; position:relative; font-size:15px; }
+  .worries li::before{ content:""; position:absolute; left:20px; top:27px; width:12px; height:12px; border-radius:50%; border:2px solid var(--sage); }
+  .answer{ text-align:center; margin-top:44px; font-family:"Shippori Mincho",serif; font-size:clamp(18px,3.4vw,22px); line-height:2; letter-spacing:.1em; }
+  .answer em{ font-style:normal; background:linear-gradient(transparent 62%,var(--sage-l) 62%); }
+
+  /* service */
+  .services{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .svc{ background:#fff; border-radius:18px; padding:30px 24px; border:1px solid var(--line); }
+  .svc .ic{ width:54px; height:54px; border-radius:50%; background:var(--sage-l); display:grid; place-items:center; margin-bottom:16px; }
+  .svc .ic svg{ width:26px; height:26px; stroke:var(--sage-d); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .svc h3{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:19px; letter-spacing:.1em; }
+  .svc h3 .en{ font-size:13px; color:var(--sage); margin-left:6px; font-weight:500; }
+  .svc p{ color:var(--sub); font-size:14px; margin-top:8px; line-height:1.9; }
+
+  /* price */
+  .plans{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px; max-width:960px; margin:0 auto; }
+  .plan{ background:#fff; border-radius:20px; padding:34px 28px 30px; border:1px solid var(--line); position:relative; text-align:center; }
+  .plan.recommend{ border:2px solid var(--sage); }
+  .plan .tag{ position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:var(--sage); color:#fff; font-size:12px; padding:3px 16px; border-radius:20px; white-space:nowrap; }
+  .plan .en{ color:var(--sage); font-size:15px; }
+  .plan h3{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:21px; letter-spacing:.1em; }
+  .plan .time{ color:var(--sub); font-size:13px; margin-top:4px; }
+  .plan .yen{ font-family:"Cormorant Garamond",serif; font-size:42px; font-weight:500; color:var(--sage-d); margin:14px 0 2px; letter-spacing:.02em; }
+  .plan .yen small{ font-family:"Zen Kaku Gothic New",sans-serif; font-size:13px; color:var(--sub); margin-left:2px; }
+  .plan ul{ text-align:left; margin-top:18px; border-top:1px dashed var(--line); padding-top:16px; }
+  .plan li{ list-style:none; font-size:14px; color:var(--sub); padding-left:18px; position:relative; margin:4px 0; }
+  .plan li::before{ content:"·"; position:absolute; left:4px; color:var(--sage); font-weight:700; }
+  .options{ max-width:720px; margin:40px auto 0; background:#fff; border-radius:16px; padding:24px 28px; border:1px solid var(--line); }
+  .options h4{ font-family:"Shippori Mincho",serif; font-weight:600; letter-spacing:.1em; margin-bottom:10px; }
+  .opt{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px dotted var(--line); font-size:14px; }
+  .opt:last-child{ border-bottom:none; }
+  .opt span:last-child{ color:var(--sage-d); white-space:nowrap; font-weight:500; }
+  .note{ max-width:720px; margin:18px auto 0; font-size:12px; color:var(--sub); line-height:1.9; }
+
+  /* reasons */
+  .reasons{ display:grid; gap:22px; max-width:860px; margin:0 auto; }
+  .reason{ display:grid; grid-template-columns:72px 1fr; gap:20px; align-items:start; background:#fff; border-radius:18px; padding:26px 28px; border:1px solid var(--line); }
+  .reason .no{ font-family:"Cormorant Garamond",serif; font-size:44px; color:var(--clay); line-height:1; text-align:center; }
+  .reason .no small{ display:block; font-size:12px; letter-spacing:.2em; color:var(--sub); }
+  .reason h3{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:18px; letter-spacing:.08em; }
+  .reason p{ color:var(--sub); font-size:14px; margin-top:6px; }
+
+  /* flow */
+  .flow{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; counter-reset:step; }
+  .step{ background:#fff; border-radius:16px; padding:26px 20px; text-align:center; border:1px solid var(--line); counter-increment:step; }
+  .step::before{ content:"STEP " counter(step); display:block; font-family:"Cormorant Garamond",serif; font-style:italic; color:var(--sage); letter-spacing:.14em; font-size:15px; }
+  .step h3{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:17px; margin:6px 0; letter-spacing:.08em; }
+  .step p{ font-size:13px; color:var(--sub); line-height:1.85; }
+
+  /* staff */
+  .staff{ display:grid; grid-template-columns:200px 1fr; gap:36px; align-items:center; max-width:820px; margin:0 auto; background:#fff; border-radius:22px; padding:36px; border:1px solid var(--line); }
+  .staff .photo{ width:200px; height:200px; border-radius:50%; background:var(--sage-l); display:grid; place-items:center; color:var(--sage-d); font-size:12px; text-align:center; }
+  .staff .role{ color:var(--sage); font-size:13px; letter-spacing:.1em; }
+  .staff h3{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:22px; letter-spacing:.14em; margin:2px 0 12px; }
+  .staff p{ font-size:14px; color:var(--sub); }
+  @media (max-width:680px){ .staff{ grid-template-columns:1fr; text-align:center; padding:30px 22px; } .staff .photo{ margin:0 auto; width:160px; height:160px; } }
+
+  /* faq */
+  .faq{ max-width:780px; margin:0 auto; }
+  details{ background:#fff; border:1px solid var(--line); border-radius:14px; margin-bottom:12px; }
+  summary{ list-style:none; cursor:pointer; padding:18px 48px 18px 54px; position:relative; font-weight:500; font-size:15px; }
+  summary::-webkit-details-marker{ display:none; }
+  summary::before{ content:"Q"; position:absolute; left:22px; top:15px; font-family:"Cormorant Garamond",serif; font-size:22px; color:var(--sage); }
+  summary::after{ content:"+"; position:absolute; right:22px; top:14px; font-size:20px; color:var(--sage); transition:.2s; }
+  details[open] summary::after{ transform:rotate(45deg); }
+  details p{ padding:0 24px 20px 54px; font-size:14px; color:var(--sub); position:relative; }
+  details p::before{ content:"A"; position:absolute; left:22px; top:-4px; font-family:"Cormorant Garamond",serif; font-size:22px; color:var(--clay); }
+
+  /* area */
+  .area{ max-width:720px; margin:0 auto; text-align:center; background:#fff; border-radius:18px; padding:30px; border:1px solid var(--line); }
+  .area .big{ font-family:"Shippori Mincho",serif; font-size:20px; letter-spacing:.1em; color:var(--sage-d); }
+  .area p{ font-size:13px; color:var(--sub); margin-top:8px; }
+
+  /* cta */
+  .cta{ background:var(--sage-d); color:#fff; text-align:center; padding:80px 0; }
+  .cta .en{ color:#D9E2D4; font-size:18px; }
+  .cta h2{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:clamp(22px,4.4vw,30px); letter-spacing:.14em; margin:10px 0 16px; line-height:1.7; }
+  .cta p{ font-size:14px; opacity:.9; line-height:2.1; }
+  .cta .btn-ghost{ background:transparent; color:#fff; border-color:rgba(255,255,255,.6); }
+
+  footer{ background:var(--linen); padding:46px 0 30px; text-align:center; font-size:13px; color:var(--sub); }
+  footer .logo{ justify-content:center; margin-bottom:12px; }
+  footer .info{ line-height:2; }
+  footer .copy{ margin-top:22px; font-size:11px; letter-spacing:.12em; }
+
+  /* floating line (mobile) */
+  .float{ display:none; }
+  @media (max-width:760px){
+    .float{ display:flex; position:fixed; left:16px; right:16px; bottom:14px; z-index:20; justify-content:center; background:var(--line-green); color:#fff; text-decoration:none; font-weight:500; padding:14px; border-radius:40px; box-shadow:0 8px 22px rgba(0,0,0,.18); }
+    footer{ padding-bottom:96px; }
+    section{ padding:68px 0; }
+    .hero{ padding:64px 0 76px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <a href="#" class="logo"><b>くらしの手</b><span>polite living</span></a>
+    <nav>
+      <a href="#service">サービス</a>
+      <a href="#price">料金</a>
+      <a href="#flow">ご利用の流れ</a>
+      <a href="#faq">よくある質問</a>
+      <a href="https://lin.ee/XXXXXXX" class="hbtn">LINEで予約</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="inner">
+    <div class="en">polite living</div>
+    <h1>暮らしに、<br>そっと手を添える。</h1>
+    <p>掃除、料理、洗濯、片づけ。<br>手が回らない毎日のすき間を、<br>ていねいな手しごとで整えます。</p>
+    <div class="btns">
+      <a href="https://lin.ee/XXXXXXX" class="btn btn-line">LINEで初回お試しを予約 <small>相談だけでもOK</small></a>
+      <a href="#price" class="btn btn-ghost">料金を見る</a>
+    </div>
+  </div>
+</div>
+
+<!-- WORRIES -->
+<section>
+  <div class="inner">
+    <div class="sec-title"><span class="en">your days</span><h2>こんなこと、ありませんか？</h2></div>
+    <ul class="worries">
+      <li>仕事と育児で、週末が家事だけで終わってしまう</li>
+      <li>水まわりの汚れが気になるけれど、手をつける時間がない</li>
+      <li>平日の夕飯づくりが、毎日の負担になっている</li>
+      <li>離れて暮らす親の家のことが、ずっと気がかり</li>
+      <li>家事代行は気になるけれど、知らない人を家に入れるのが不安</li>
+      <li>散らかった部屋を見るたびに、気持ちが沈んでしまう</li>
+    </ul>
+    <p class="answer">家事を手放すことは、手を抜くことではありません。<br><em>自分と家族のための時間を、取り戻すこと。</em></p>
+  </div>
+</section>
+
+<!-- SERVICE -->
+<section id="service" class="bg-linen">
+  <div class="inner">
+    <div class="sec-title"><span class="en">service</span><h2>お手伝いできること</h2><p>時間内であれば、ご要望に合わせて組み合わせられます。</p></div>
+    <div class="services">
+      <div class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 20h16M7 20V9l5-4 5 4v11"/><path d="M10 20v-5h4v5"/></svg></div>
+        <h3>お掃除<span class="en">cleaning</span></h3>
+        <p>リビング・寝室の掃除機がけや拭き掃除、キッチン・浴室・トイレなどの水まわりまで。</p>
+      </div>
+      <div class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7c0-1.5 1-2 1-3M13 7c0-1.5 1-2 1-3"/></svg></div>
+        <h3>お料理<span class="en">cooking</span></h3>
+        <p>数日分の作り置きや、その日の夕食づくり。アレルギーやお好みにも合わせます。</p>
+      </div>
+      <div class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M8 4 4 7l2 3 2-1v11h8V9l2 1 2-3-4-3c-.5 1.5-2 2.5-4 2.5S8.5 5.5 8 4z"/></svg></div>
+        <h3>お洗濯<span class="en">laundry</span></h3>
+        <p>洗濯機まわし、干す・たたむ・しまうまで。アイロンがけもお任せください。</p>
+      </div>
+      <div class="svc">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg></div>
+        <h3>整理・片づけ<span class="en">tidying</span></h3>
+        <p>散らかりがちな場所の片づけや、使いやすい収納のご提案。一緒に進めることもできます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICE -->
+<section id="price">
+  <div class="inner">
+    <div class="sec-title"><span class="en">price</span><h2>料金プラン</h2><p>すべて税込・2時間からのご利用です。</p></div>
+    <div class="plans">
+      <div class="plan">
+        <div class="en">first trial</div>
+        <h3>初回お試し</h3>
+        <div class="time">2時間／おひとり様1回限り</div>
+        <div class="yen">6,600<small>円</small></div>
+        <ul>
+          <li>はじめての方限定の特別価格</li>
+          <li>ご要望のヒアリング込み</li>
+          <li>定期プランへの移行も可能</li>
+        </ul>
+      </div>
+      <div class="plan recommend">
+        <span class="tag">いちばん人気</span>
+        <div class="en">regular</div>
+        <h3>定期プラン</h3>
+        <div class="time">2時間／毎週・隔週・月1回</div>
+        <div class="yen">7,700<small>円 / 回</small></div>
+        <ul>
+          <li>できるだけ同じスタッフが担当</li>
+          <li>曜日・時間を固定して安心</li>
+          <li>3時間以上は1時間ごと3,850円</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <div class="en">spot</div>
+        <h3>スポットプラン</h3>
+        <div class="time">2時間〜／必要なときに1回から</div>
+        <div class="yen">8,800<small>円〜</small></div>
+        <ul>
+          <li>来客前・大掃除・産前産後に</li>
+          <li>3時間以上は1時間ごと4,400円</li>
+          <li>ご希望日の3日前までにご予約</li>
+        </ul>
+      </div>
+    </div>
+    <div class="options">
+      <h4>オプション</h4>
+      <div class="opt"><span>作り置き（4〜6品）</span><span>+1,100円</span></div>
+      <div class="opt"><span>水まわり集中クリーン（浴室・キッチン・トイレ）</span><span>+2,200円</span></div>
+      <div class="opt"><span>土日祝のご利用</span><span>+1,100円</span></div>
+    </div>
+    <p class="note">※交通費として1回550円をいただきます（対応エリア外は別途ご相談）。<br>※作り置きの食材費は実費となります。お客様のご自宅の調理器具・洗剤を使用します。<br>※キャンセルは前日18時までは無料、それ以降は料金の50％、当日は100％を頂戴します。</p>
+  </div>
+</section>
+
+<!-- REASON -->
+<section class="bg-linen">
+  <div class="inner">
+    <div class="sec-title"><span class="en">our promise</span><h2>くらしの手が大切にしていること</h2></div>
+    <div class="reasons">
+      <div class="reason">
+        <div class="no">01<small>POLITE</small></div>
+        <div><h3>おうちのルールに合わせる、ていねいさ</h3><p>洗剤の種類、ものの置き場所、触れてほしくない場所。はじめにしっかりお聞きして、その家ならではのやり方で整えます。</p></div>
+      </div>
+      <div class="reason">
+        <div class="no">02<small>SAFE</small></div>
+        <div><h3>はじめてでも安心できる体制</h3><p>損害賠償保険に加入済み。鍵のお預かりは書面で管理し、お伺いの前後には必ずLINEでご連絡します。</p></div>
+      </div>
+      <div class="reason">
+        <div class="no">03<small>SAME HANDS</small></div>
+        <div><h3>できるだけ、いつも同じ手で</h3><p>定期プランは担当スタッフ制。毎回説明し直す手間がなく、回を重ねるほど暮らしになじんでいきます。</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLOW -->
+<section id="flow">
+  <div class="inner">
+    <div class="sec-title"><span class="en">flow</span><h2>ご利用の流れ</h2></div>
+    <div class="flow">
+      <div class="step"><h3>LINEで友だち追加</h3><p>メニューの「予約・相談」から、ご希望の日時と内容をお送りください。</p></div>
+      <div class="step"><h3>日程の確定</h3><p>24時間以内にご返信します。ご不明な点はこの時点でお気軽に。</p></div>
+      <div class="step"><h3>当日のヒアリング</h3><p>最初の10分で、優先したい場所やおうちのルールをお聞きします。</p></div>
+      <div class="step"><h3>お手伝い・ご報告</h3><p>作業後に内容をご報告。お支払いは当日現金または振込で。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- STAFF -->
+<section class="bg-linen">
+  <div class="inner">
+    <div class="sec-title"><span class="en">about us</span><h2>代表あいさつ</h2></div>
+    <div class="staff">
+      <div class="photo">代表写真<br>（正方形推奨）</div>
+      <div>
+        <div class="role">くらしの手 代表</div>
+        <h3>【代表者名】</h3>
+        <p>家事は、毎日続くからこそ、ひとりで抱えると重たくなってしまうもの。<br>「くらしの手」は、そんな毎日に、そっと手を添える存在でありたいと思っています。<br>きれいにすることはもちろん、帰ってきたときにほっとできるおうちを一緒につくっていけたらうれしいです。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="inner">
+    <div class="sec-title"><span class="en">q &amp; a</span><h2>よくあるご質問</h2></div>
+    <div class="faq">
+      <details><summary>留守中でもお願いできますか？</summary><p>はい、可能です。鍵のお預かりは書面にて管理いたします。初回のみ、ヒアリングのため在宅をお願いしています。</p></details>
+      <details><summary>道具や洗剤は持参が必要ですか？</summary><p>基本的にはお客様のご自宅にあるものを使用します。ご希望があれば、持参の洗剤（実費）にも対応いたします。</p></details>
+      <details><summary>ペットがいても大丈夫ですか？</summary><p>大丈夫です。事前に種類や注意点をお知らせください。</p></details>
+      <details><summary>お願いできないことはありますか？</summary><p>高所作業、エアコン内部の分解洗浄、介護・医療行為、ペットのお世話のみのご依頼はお受けしておりません。</p></details>
+      <details><summary>支払い方法を教えてください。</summary><p>当日の現金払い、または銀行振込に対応しています（定期プランは月末締めの請求も可能です）。</p></details>
+      <details><summary>家族へのプレゼントとして申し込めますか？</summary><p>はい。離れて暮らすご両親や、出産を迎えるご家族への贈りものとしてもご利用いただいています。LINEでご相談ください。</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- AREA -->
+<section class="bg-linen" style="padding-top:64px;padding-bottom:64px">
+  <div class="inner">
+    <div class="sec-title" style="margin-bottom:26px"><span class="en">area</span><h2>対応エリア</h2></div>
+    <div class="area">
+      <div class="big">【○○市・○○市・○○町】</div>
+      <p>上記以外の地域も、交通費のご相談にてお伺いできる場合があります。</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta">
+  <div class="inner">
+    <div class="en">for your polite living</div>
+    <h2>まずは、気軽にひと言から。</h2>
+    <p>「こんなことも頼める？」というご相談だけでも大丈夫です。<br>LINEなら、思いついたときにすぐ送れます。</p>
+    <div class="btns">
+      <a href="https://lin.ee/XXXXXXX" class="btn btn-line">LINEで予約・相談する</a>
+      <a href="tel:00000000000" class="btn btn-ghost">お電話はこちら</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="#" class="logo"><b>くらしの手</b><span>polite living</span></a>
+  <div class="info">
+    家事代行・ハウスキーピング<br>
+    代表 【代表者名】<br>
+    TEL 000-0000-0000 ／ 受付 9:00〜18:00（日曜定休）<br>
+    対応エリア 【○○市・○○市・○○町】
+  </div>
+  <div class="copy">© kurashi no te — polite living</div>
+</footer>
+
+<a href="https://lin.ee/XXXXXXX" class="float">LINEで初回お試しを予約する</a>
+
+</body>
+</html>

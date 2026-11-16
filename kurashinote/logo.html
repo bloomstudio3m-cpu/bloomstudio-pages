@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>くらしの手 ロゴ</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+<style>
+  :root{ --sage-d:#56685A; --sage:#7C8F7A; --sage-l:#E7ECE3; --linen:#F7F3EC; --ink:#3B3832; --clay:#C69C7B; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#E9E5DD; padding:40px; display:grid; gap:30px; font-family:sans-serif; }
+  .box{ background:var(--linen); padding:60px 70px; display:flex; align-items:center; justify-content:center; width:fit-content; }
+  .box.dark{ background:var(--sage-d); }
+  .cap{ font-size:12px; color:#888; margin-bottom:-22px; }
+
+  /* mark（use内部はCSS変数で色を渡す） */
+  .mark{ display:block; --mk:var(--sage-d); --mkf:var(--sage-l); }
+  .dark .mark{ --mk:#fff; --mkf:rgba(255,255,255,.14); }
+  .word b{ font-family:"Shippori Mincho",serif; font-weight:600; color:var(--ink); letter-spacing:.12em; display:block; line-height:1.2; }
+  .word span{ font-family:"Cormorant Garamond",serif; font-style:italic; color:var(--sage-d); letter-spacing:.14em; display:block; }
+  .dark .word b{ color:#fff; } .dark .word span{ color:#D9E2D4; }
+
+  .yoko{ display:flex; align-items:center; gap:22px; }
+  .yoko .word b{ font-size:44px; } .yoko .word span{ font-size:22px; margin-top:4px; padding-left:2px; }
+  .tate{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px; }
+  .tate .word b{ font-size:40px; padding-left:.12em; } .tate .word span{ font-size:20px; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="m" viewBox="0 0 100 100">
+    <!-- 芽（葉） -->
+    <path d="M50 18 C66 28 68 50 50 62 C32 50 34 28 50 18 Z" style="fill:var(--mkf);stroke:var(--mk);stroke-width:3.6;stroke-linejoin:round"/>
+    <path d="M50 30 V58" style="fill:none;stroke:var(--mk);stroke-width:2.4;stroke-linecap:round"/>
+    <!-- 包む手 -->
+    <path d="M18 56 C22 80 42 88 50 88 C58 88 78 80 82 56" style="fill:none;stroke:var(--mk);stroke-width:4.2;stroke-linecap:round"/>
+    <path d="M18 56 C15 50 20 46 25 52" style="fill:none;stroke:var(--mk);stroke-width:4.2;stroke-linecap:round"/>
+    <circle cx="78" cy="30" r="4.2" style="fill:#C69C7B"/>
+  </symbol>
+</svg>
+
+<div class="cap">A｜横組み（メイン）</div>
+<div class="box" id="logo-yoko">
+  <div class="yoko">
+    <svg class="mark" width="92" height="92"><use href="#m"/></svg>
+    <div class="word"><b>くらしの手</b><span>polite living</span></div>
+  </div>
+</div>
+
+<div class="cap">B｜縦組み（SNSアイコン・名刺裏など）</div>
+<div class="box" id="logo-tate">
+  <div class="tate">
+    <svg class="mark" width="110" height="110"><use href="#m"/></svg>
+    <div class="word"><b>くらしの手</b><span>polite living</span></div>
+  </div>
+</div>
+
+<div class="cap">C｜白抜き</div>
+<div class="box dark" id="logo-dark">
+  <div class="yoko">
+    <svg class="mark" width="92" height="92"><use href="#m"/></svg>
+    <div class="word"><b>くらしの手</b><span>polite living</span></div>
+  </div>
+</div>
+
+<div class="cap">D｜LINEアイコン（640×640）</div>
+<div class="box" id="logo-icon" style="width:640px;height:640px;padding:0;border-radius:0">
+  <div class="tate">
+    <svg class="mark" width="230" height="230"><use href="#m"/></svg>
+    <div class="word"><b style="font-size:62px">くらしの手</b></div>
+  </div>
+</div>
+
+</body>
+</html>

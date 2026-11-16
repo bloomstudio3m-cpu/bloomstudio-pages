@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>くらしの手 リッチメニュー（2500×1686）</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@500&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+<style>
+  :root{ --sage:#7C8F7A; --sage-d:#56685A; --sage-l:#E7ECE3; --linen:#F7F3EC; --ink:#3B3832; --sub:#77716A; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ width:2500px; height:1686px; background:var(--linen); font-family:"Zen Kaku Gothic New",sans-serif; color:var(--ink); }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); width:100%; height:100%; gap:6px; background:#DDD4C4; }
+  .cell{ background:var(--linen); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .cell.main{ background:var(--sage-d); color:#fff; }
+  .cell .ic{ width:190px; height:190px; border-radius:50%; background:var(--sage-l); display:grid; place-items:center; margin-bottom:46px; }
+  .cell.main .ic{ background:rgba(255,255,255,.16); }
+  .ic svg{ width:96px; height:96px; fill:none; stroke:var(--sage-d); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+  .main .ic svg{ stroke:#fff; }
+  .t{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:92px; letter-spacing:.12em; }
+  .en{ font-family:"Cormorant Garamond",serif; font-style:italic; font-size:58px; color:var(--sage); margin-top:14px; letter-spacing:.08em; }
+  .main .en{ color:#D9E2D4; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="cell main">
+    <div class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/></svg></div>
+    <div class="t">予約・相談</div><div class="en">reserve</div>
+  </div>
+  <div class="cell">
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5c0-1 1-1.5 2.5-1.5s2.5.7 2.5 1.8c0 2.6-5 1.4-5 4 0 1.1 1 1.7 2.5 1.7s2.5-.6 2.5-1.5"/></svg></div>
+    <div class="t">料金プラン</div><div class="en">price</div>
+  </div>
+  <div class="cell">
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 20h16M7 20V9l5-4 5 4v11"/><path d="M10 20v-5h4v5"/></svg></div>
+    <div class="t">サービス内容</div><div class="en">service</div>
+  </div>
+  <div class="cell">
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+    <div class="t">はじめての方へ</div><div class="en">first time</div>
+  </div>
+  <div class="cell">
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.6v.1"/></svg></div>
+    <div class="t">よくある質問</div><div class="en">q &amp; a</div>
+  </div>
+  <div class="cell">
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13.5 0 16M12 4c-2.5 2.5-2.5 13.5 0 16"/></svg></div>
+    <div class="t">ホームページ</div><div class="en">website</div>
+  </div>
+</div>
+</body>
+</html>
