@@ -6,38 +6,35 @@
 <title>くらしの手 名刺（91×55mm）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{ --sage:#7C8F7A; --sage-d:#56685A; --sage-l:#E7ECE3; --linen:#F7F3EC; --ink:#3B3832; --sub:#77716A; --clay:#C69C7B; }
+  /* ピンク指定パレット（ロゴ案から抽出） */
+  :root{ --pink:#DB8C88; --pink-d:#C4716D; --pink-l:#F7E6E3; --cream:#FFFBF8; --brown:#7A5A45; --sub:#9A8576; }
   *{ box-sizing:border-box; margin:0; padding:0; }
-  body{ background:#E9E5DD; font-family:"Zen Kaku Gothic New",sans-serif; color:var(--ink); padding:10mm; display:flex; flex-wrap:wrap; gap:10mm; justify-content:center; }
+  body{ background:#EDE7E3; font-family:"Zen Kaku Gothic New",sans-serif; color:var(--brown); padding:10mm; display:flex; flex-wrap:wrap; gap:10mm; justify-content:center; }
   .card{ width:91mm; height:55mm; position:relative; overflow:hidden; box-shadow:0 2mm 6mm rgba(0,0,0,.12); }
   .label{ width:100%; text-align:center; font-size:11px; color:#888; margin-bottom:-6mm; }
 
   /* 表 */
-  .front{ background:var(--linen); padding:6mm 6.5mm; }
-  .front::before{ content:""; position:absolute; width:46mm; height:46mm; border-radius:50%; background:var(--sage-l); right:-14mm; top:-16mm; }
-  .front > *{ position:relative; }
-  .mark{ --mk:var(--sage-d); --mkf:var(--sage-l); display:block; }
-  .back .mark{ --mk:#fff; --mkf:rgba(255,255,255,.14); }
-  .f-brand{ display:flex; align-items:center; gap:2.4mm; }
-  .f-brand .mark{ width:10mm; height:10mm; }
-  .f-brand b{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:5.2mm; letter-spacing:.12em; display:block; line-height:1.3; }
-  .f-brand span{ font-family:"Zen Kaku Gothic New",sans-serif; font-size:2.2mm; color:var(--sage-d); letter-spacing:.12em; display:block; margin-top:.6mm; }
-  .f-name{ position:absolute; left:6.5mm; bottom:15mm; }
-  .f-name .role{ font-size:2.1mm; color:var(--sub); letter-spacing:.14em; }
-  .f-name .nm{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:5mm; letter-spacing:.24em; margin-top:.6mm; }
-  .f-name .ro{ font-family:"Cormorant Garamond",serif; font-size:2.6mm; letter-spacing:.18em; color:var(--sage-d); }
-  .f-info{ position:absolute; left:6.5mm; right:6.5mm; bottom:5mm; font-size:2.05mm; line-height:1.75; color:var(--ink); border-top:.2mm solid #D9D0C0; padding-top:2mm; letter-spacing:.04em; }
+  .front{ background:#FFFFFF; display:grid; grid-template-columns:30mm 1fr; align-items:center; padding:5mm 6mm 5mm 4mm; gap:3mm; }
+  .front::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:1.6mm; background:var(--pink); }
+  .f-logo img{ width:30mm; height:30mm; object-fit:contain; display:block; }
+  .f-main .role{ font-size:2mm; color:var(--sub); letter-spacing:.08em; line-height:1.6; }
+  .f-main .nm{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:5mm; letter-spacing:.22em; margin-top:.8mm; color:var(--brown); }
+  .f-main .ro{ font-size:2mm; letter-spacing:.2em; color:var(--pink-d); margin-top:.2mm; }
+  .f-main .info{ margin-top:3mm; padding-top:2.2mm; border-top:.2mm solid var(--pink-l); font-size:2mm; line-height:1.8; letter-spacing:.03em; }
+  .f-main .info b{ display:inline-block; width:8mm; color:var(--pink-d); font-weight:500; }
 
   /* 裏 */
-  .back{ background:var(--sage-d); color:#fff; display:grid; grid-template-columns:1fr 20mm; gap:4mm; padding:6.5mm; align-items:center; }
-  .b-copy .en{ font-family:"Cormorant Garamond",serif; font-style:italic; font-size:2.8mm; color:#D9E2D4; letter-spacing:.1em; }
-  .b-copy h2{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:4.1mm; letter-spacing:.14em; line-height:1.65; margin:1.2mm 0 2.4mm; }
-  .b-copy ul{ list-style:none; font-size:2.1mm; line-height:1.9; color:#EEF2EB; }
+  .back{ background:var(--pink); color:#fff; display:grid; grid-template-columns:1fr 20mm; gap:4mm; padding:6.5mm; align-items:center; }
+  .b-copy .shop{ font-family:"Shippori Mincho",serif; font-weight:600; font-size:3.4mm; letter-spacing:.2em; }
+  .b-copy .shop small{ font-family:"Zen Kaku Gothic New",sans-serif; font-weight:400; font-size:2mm; letter-spacing:.1em; margin-left:1.5mm; }
+  .b-copy h2{ font-family:"Shippori Mincho",serif; font-weight:500; font-size:3.9mm; letter-spacing:.12em; line-height:1.7; margin:2.4mm 0 2.4mm; }
+  .b-copy ul{ list-style:none; font-size:2.1mm; line-height:1.9; }
   .b-copy li::before{ content:"・"; }
+  .b-copy .area{ font-size:1.9mm; margin-top:1.6mm; opacity:.92; letter-spacing:.04em; }
   .b-qr{ text-align:center; }
-  .b-qr .qr{ width:20mm; height:20mm; background:#fff; border-radius:1.5mm; display:grid; place-items:center; color:var(--sage-d); font-size:2mm; line-height:1.4; }
+  .b-qr .qr{ width:20mm; height:20mm; background:#fff; border-radius:1.5mm; display:grid; place-items:center; color:var(--pink-d); font-size:2mm; line-height:1.4; }
   .b-qr p{ font-size:1.9mm; margin-top:1.4mm; line-height:1.5; letter-spacing:.04em; }
 
   @media print{
@@ -49,40 +46,33 @@
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute">
-  <symbol id="m" viewBox="0 0 100 100">
-    <path d="M50 18 C66 28 68 50 50 62 C32 50 34 28 50 18 Z" style="fill:var(--mkf);stroke:var(--mk);stroke-width:3.6;stroke-linejoin:round"/>
-    <path d="M50 30 V58" style="fill:none;stroke:var(--mk);stroke-width:2.4;stroke-linecap:round"/>
-    <path d="M18 56 C22 80 42 88 50 88 C58 88 78 80 82 56" style="fill:none;stroke:var(--mk);stroke-width:4.2;stroke-linecap:round"/>
-    <path d="M18 56 C15 50 20 46 25 52" style="fill:none;stroke:var(--mk);stroke-width:4.2;stroke-linecap:round"/>
-    <circle cx="78" cy="30" r="4.2" style="fill:#C69C7B"/>
-  </symbol>
-</svg>
 
-<div class="label">表面</div>
+<div class="label">表面（ロゴはD案の仮置き）</div>
 <div class="card front" id="front">
-  <div class="f-brand"><svg class="mark"><use href="#m"/></svg><div><b>くらしの手</b><span>富士・富士宮の家事代行と片づけ</span></div></div>
-  <div class="f-name">
-    <div class="role">代表　整理収納アドバイザー1級／終活アドバイザー</div>
+  <div class="f-logo"><img src="assets/logo_D_draft.webp" alt="くらしの手"></div>
+  <div class="f-main">
+    <div class="role">代表<br>整理収納アドバイザー1級／終活アドバイザー</div>
     <div class="nm">【代表者名】</div>
-    <div class="ro">【Romaji Name】</div>
-  </div>
-  <div class="f-info">
-    TEL 000-0000-0000　対応 富士・富士宮・三島・沼津・御殿場<br>
-    LINE @xxxxxxx　WEB https://politeliving2022.com
+    <div class="ro">【ROMAJI NAME】</div>
+    <div class="info">
+      <b>TEL</b>000-0000-0000<br>
+      <b>LINE</b>@xxxxxxx<br>
+      <b>WEB</b>politeliving2022.com
+    </div>
   </div>
 </div>
 
 <div class="label">裏面</div>
 <div class="card back" id="back">
   <div class="b-copy">
-    <svg class="mark" style="width:8mm;height:8mm;margin:-1mm 0 1mm -1mm"><use href="#m"/></svg>
+    <div class="shop">くらしの手<small>家事代行と片づけ</small></div>
     <h2>暮らしに、<br>そっと手を添える。</h2>
     <ul>
       <li>お掃除・水まわり</li>
       <li>整理収納・片づけ</li>
       <li>生前整理・実家の片づけ</li>
     </ul>
+    <div class="area">対応：富士・富士宮・三島・沼津・御殿場</div>
   </div>
   <div class="b-qr">
     <div class="qr">LINE<br>QRコード</div>
