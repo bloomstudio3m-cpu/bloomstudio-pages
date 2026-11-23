@@ -130,6 +130,8 @@
   @media (max-width:480px){ .flow{ grid-template-columns:1fr; } }
 
   .photo{ overflow:hidden; }
+  .icon-panel{ background:var(--pink-xl); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--pink-d); font-size:13px; font-weight:500; }
+  .icon-panel svg{ width:64px; height:64px; fill:none; stroke:var(--pink); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .photo img{ width:100%; height:100%; object-fit:cover; }
   .about .photo img{ object-position:50% 30%; }
   /* before after */
@@ -286,7 +288,7 @@
         </div>
       </div>
       <div class="svc">
-        <div class="photo"><img src="assets/photos/closet_after.jpg" alt="整理したクローゼット"></div>
+        <div class="photo"><img src="assets/photos/entrance_after.jpg" alt="片づけた玄関"></div>
         <div class="body">
           <div class="tag">整理収納</div>
           <h3>片づけ・収納の見直し</h3>
@@ -295,7 +297,7 @@
         </div>
       </div>
       <div class="svc">
-        <div class="photo"><img src="assets/photos/entrance_after.jpg" alt="片づけた玄関"></div>
+        <div class="photo icon-panel"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="12" y="16" width="40" height="32" rx="4"/><path d="M12 24h40"/><rect x="18" y="30" width="12" height="10" rx="2"/><path d="M36 32h10M36 38h8"/></svg><span>思い出の品も、ひとつずつ一緒に</span></div>
         <div class="body">
           <div class="tag">終活</div>
           <h3>生前整理・実家の片づけ</h3>
