@@ -129,6 +129,29 @@
   @media (max-width:820px){ .flow{ grid-template-columns:1fr 1fr; } }
   @media (max-width:480px){ .flow{ grid-template-columns:1fr; } }
 
+  .photo{ overflow:hidden; }
+  .photo img{ width:100%; height:100%; object-fit:cover; }
+  .about .photo img{ object-position:50% 30%; }
+  /* before after */
+  .ba{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .ba-item{ background:#fff; border-radius:20px; border:1px solid var(--line); padding:16px; }
+  .ba-pair{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .ba-pair figure{ position:relative; aspect-ratio:3/4; border-radius:12px; overflow:hidden; }
+  .ba-pair img{ width:100%; height:100%; object-fit:cover; }
+  .ba-pair figcaption{ position:absolute; left:8px; top:8px; font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; background:rgba(255,255,255,.92); color:var(--sub); }
+  .ba-pair figure.after figcaption{ background:var(--pink); color:#fff; }
+  .ba-item h3{ font-family:"Zen Maru Gothic",sans-serif; font-weight:700; color:var(--brown); font-size:16px; margin:12px 4px 2px; }
+  .ba-item p{ font-size:13px; color:var(--sub); margin:0 4px; line-height:1.8; }
+  @media (max-width:820px){ .ba{ grid-template-columns:1fr; } }
+  /* voice */
+  .voices{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; max-width:880px; margin:0 auto; }
+  .voice{ background:#fff; border-radius:18px; border:1px solid var(--line); padding:22px 24px; position:relative; }
+  .voice::before{ content:"“"; position:absolute; left:16px; top:-6px; font-family:Georgia,serif; font-size:56px; color:var(--pink-l); line-height:1; }
+  .voice p{ font-size:14px; position:relative; }
+  .voice .who{ margin-top:10px; font-size:12px; color:var(--pink-d); font-weight:500; text-align:right; }
+  @media (max-width:680px){ .voices{ grid-template-columns:1fr; } }
+  .quote{ max-width:760px; margin:0 auto 40px; text-align:center; font-family:"Zen Maru Gothic",sans-serif; font-weight:700; color:var(--brown); font-size:clamp(18px,3.4vw,22px); line-height:1.9; }
+  .quote em{ font-style:normal; color:var(--pink-d); }
   /* faq */
   .faq{ max-width:780px; margin:0 auto; }
   details{ background:#fff; border:1px solid var(--line); border-radius:14px; margin-bottom:10px; }
@@ -201,14 +224,14 @@
       <span class="area">富士・富士宮・三島・沼津・御殿場</span>
       <h1>富士・富士宮の<br><span>家事代行と片づけ</span><br>くらしの手</h1>
       <p class="lead">お掃除や水まわりから、片づけ・整理収納、<br>生前整理や実家の片づけまで。<br>暮らしのことを、ていねいにお手伝いします。</p>
-      <div class="badges"><span>整理収納アドバイザー1級</span><span>終活アドバイザー</span><span>遺品整理士</span></div>
+      <div class="badges"><span>整理収納アドバイザー1級</span><span>終活アドバイザー</span><span>遺品整理士</span><span>活動8年・のべ1,000回</span><span>損害賠償保険に加入</span></div>
       <div class="btns">
         <a href="https://lin.ee/IP7Fukz" class="btn btn-line">LINEで予約・相談する</a>
         <a href="#price" class="btn btn-ghost">料金を見る</a>
       </div>
       <p class="btn-note">「何を頼めばいいか決まっていない」ご相談も大丈夫です。</p>
     </div>
-    <div class="photo ph">写真：作業中の手元／整ったキッチンや収納<br>（明るい自然光・人物は後ろ姿や手元がおすすめ）</div>
+    <div class="photo"><img src="assets/photos/closet_after.jpg" alt="整理収納で使いやすく整えたクローゼット"></div>
   </div>
 </div>
 
@@ -231,11 +254,11 @@
   <div class="inner">
     <div class="sec-title"><span class="en">About</span><h2><span class="nb">お伺いするのは、</span><span class="nb">こんな人です</span></h2></div>
     <div class="about">
-      <div class="photo ph">代表のお写真<br>（笑顔・正方形）</div>
+      <div class="photo"><img src="assets/photos/profile.jpg" alt="くらしの手 代表 藤田美枝子"></div>
       <div>
         <div class="role">くらしの手 代表</div>
-        <h3>MEI</h3>
-        <p>富士宮市在住。整理収納アドバイザーとして【○】年、家事代行と片づけのお手伝いを続けています。<br>祖母を突然亡くした経験から、「遺される家族の心が少しでも軽くなるように」と、生前整理や終活のご相談にも力を入れています。</p>
+        <h3>藤田 美枝子</h3>
+        <p>富士宮市在住。整理収納アドバイザーとして8年、これまで180件、のべ1,000回以上のお宅にお伺いしてきました。お伺いするのは、いつも私ひとりです。<br>祖母を突然亡くした経験から、「遺される家族の心が少しでも軽くなるように」と、生前整理や終活のご相談にも力を入れています。</p>
         <div class="quals">
           <div>整理収納アドバイザー1級</div>
           <div>終活アドバイザー</div>
@@ -254,7 +277,7 @@
     <div class="sec-title"><span class="en">Service</span><h2>お手伝いできること</h2><p>1回の中で組み合わせることもできます。</p></div>
     <div class="services">
       <div class="svc">
-        <div class="photo ph">写真：水まわりの掃除</div>
+        <div class="photo"><img src="assets/photos/ih_after.jpg" alt="焦げ付きを落としたIHコンロ"></div>
         <div class="body">
           <div class="tag">家事代行</div>
           <h3>お掃除・家事</h3>
@@ -263,7 +286,7 @@
         </div>
       </div>
       <div class="svc">
-        <div class="photo ph">写真：整った収納</div>
+        <div class="photo"><img src="assets/photos/closet_after.jpg" alt="整理したクローゼット"></div>
         <div class="body">
           <div class="tag">整理収納</div>
           <h3>片づけ・収納の見直し</h3>
@@ -272,7 +295,7 @@
         </div>
       </div>
       <div class="svc">
-        <div class="photo ph">写真：アルバムや思い出の品</div>
+        <div class="photo"><img src="assets/photos/entrance_after.jpg" alt="片づけた玄関"></div>
         <div class="body">
           <div class="tag">終活</div>
           <h3>生前整理・実家の片づけ</h3>
@@ -284,8 +307,29 @@
   </div>
 </section>
 
-<!-- ⑤ 特徴 -->
+<!-- ビフォーアフター -->
 <section class="bg-pink">
+  <div class="inner">
+    <div class="sec-title"><span class="en">Before / After</span><h2>実際のお手伝いの様子</h2><p>お客さまの許可をいただいて掲載しています。</p></div>
+    <div class="ba">
+      <div class="ba-item">
+        <div class="ba-pair"><figure><img src="assets/photos/entrance_before.jpg" alt="片づけ前の玄関"><figcaption>Before</figcaption></figure><figure class="after"><img src="assets/photos/entrance_after.jpg" alt="片づけ後の玄関"><figcaption>After</figcaption></figure></div>
+        <h3>玄関の片づけ</h3><p>箱や荷物でふさがっていた玄関が、ベビーカーも出し入れしやすい広さに。</p>
+      </div>
+      <div class="ba-item">
+        <div class="ba-pair"><figure><img src="assets/photos/ih_before.jpg" alt="掃除前のIHコンロ"><figcaption>Before</figcaption></figure><figure class="after"><img src="assets/photos/ih_after.jpg" alt="掃除後のIHコンロ"><figcaption>After</figcaption></figure></div>
+        <h3>IHコンロのお掃除</h3><p>こびりついた焦げつきも、ていねいに落としてピカピカに。</p>
+      </div>
+      <div class="ba-item">
+        <div class="ba-pair"><figure><img src="assets/photos/closet_before.jpg" alt="収納づくり前のクローゼット"><figcaption>Before</figcaption></figure><figure class="after"><img src="assets/photos/closet_after.jpg" alt="収納づくり後のクローゼット"><figcaption>After</figcaption></figure></div>
+        <h3>クローゼットの収納づくり</h3><p>何もない棚から、家族が出し入れしやすい収納をいっしょに。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ 特徴 -->
+<section>
   <div class="inner">
     <div class="sec-title"><span class="en">Our Way</span><h2><span class="nb">くらしの手が</span><span class="nb">大切にしていること</span></h2></div>
     <div class="features">
@@ -306,16 +350,16 @@
 </section>
 
 <!-- ⑥ 料金 -->
-<section id="price">
+<section id="price" class="bg-pink">
   <div class="inner">
-    <div class="sec-title"><span class="en">Price</span><h2>料金</h2><p>【税込／税別】の料金です。</p></div>
+    <div class="sec-title"><span class="en">Price</span><h2>料金</h2><p>家事代行・片づけ・生前整理、どのメニューも同じ料金です（税込）。</p></div>
     <div class="price-table">
-      <div class="prow"><div><div class="name">家事代行</div><div class="desc">【○時間〜／内容】</div></div><div class="yen">【○,○○○】<small>円〜</small></div></div>
-      <div class="prow"><div><div class="name">片づけ・整理収納</div><div class="desc">【○時間〜／内容】</div></div><div class="yen">【○,○○○】<small>円〜</small></div></div>
-      <div class="prow"><div><div class="name">生前整理・実家の片づけ</div><div class="desc">【お見積り／内容】</div></div><div class="yen">【○,○○○】<small>円〜</small></div></div>
-      <div class="prow"><div><div class="name">交通費</div><div class="desc">【条件】</div></div><div class="yen">【○○○】<small>円</small></div></div>
+      <div class="prow"><div><div class="name">スポット</div><div class="desc">必要なときに1回から</div></div><div class="yen">5,000<small>円 / 1時間</small></div></div>
+      <div class="prow"><div><div class="name">定期</div><div class="desc">決まったペースで続けてお伺い</div></div><div class="yen">4,500<small>円 / 1時間</small></div></div>
+      <div class="prow"><div><div class="name">延長</div><div class="desc">30分ごと</div></div><div class="yen">2,500<small>円（定期 2,250円）</small></div></div>
+      <div class="prow"><div><div class="name">交通費</div><div class="desc">富士市・富士宮市は無料。それ以外の地域は実費と出張費をいただきます</div></div><div class="yen">無料<small>（富士・富士宮）</small></div></div>
     </div>
-    <p class="note">※【キャンセル規定】<br>※【お支払い方法】</p>
+    <p class="note">※お支払いは、当日の現金または銀行振込です。<br>※キャンセルは、お伺いの2時間前までは無料です。到着後のキャンセルや、高速道路を利用してお伺いする場合は、交通費をいただきます。</p>
     <div class="mid-cta">
       <a href="https://lin.ee/IP7Fukz" class="btn btn-line">LINEで予約・相談する</a>
       <p class="btn-note"><span class="nb">どのメニューが合うかわからない場合も、</span><span class="nb">お気軽にご相談ください。</span></p>
@@ -324,7 +368,7 @@
 </section>
 
 <!-- ⑦ 流れ -->
-<section id="flow" class="bg-pink">
+<section id="flow">
   <div class="inner">
     <div class="sec-title"><span class="en">Flow</span><h2>ご利用の流れ</h2></div>
     <div class="flow">
@@ -336,14 +380,19 @@
   </div>
 </section>
 
-<!-- お客様の声：実際の声をいただいてから表示する（架空の声は載せない）
-<section>
+<!-- お客さまの声 -->
+<section class="bg-pink">
   <div class="inner">
     <div class="sec-title"><span class="en">Voice</span><h2>お客さまの声</h2></div>
-    （ここに実際のお客さまの声を、掲載許可をいただいて入れる）
+    <p class="quote">いちばんうれしいのは、<br><em>「藤田さんに来てほしい」</em>という言葉です。</p>
+    <div class="voices">
+      <div class="voice"><p>短い時間で私の思い通りになるほどキレイにして頂きました。お仕事も丁寧でまたお願いしたいと思います。</p><div class="who">伊豆市　30代女性</div></div>
+      <div class="voice"><p>丁寧な作業で速く、使いやすいようにして下さって、自分では気が回らないところも教えてもらって、今後も自分が片付けるときに活かせるなと思って助かりました。</p><div class="who">静岡市　30代</div></div>
+      <div class="voice"><p>片づけたいと思っていた場所をあっという間に片付けてもらって嬉しかったです。やっと落ち着いて暮らせる気がします。</p><div class="who">富士宮市　50代</div></div>
+      <div class="voice"><p>自分ではできなかった片付けのお手伝いをしてもらって助かりました。</p><div class="who">富士宮市　30代</div></div>
+    </div>
   </div>
 </section>
--->
 
 <!-- ⑧ FAQ -->
 <section id="faq">
@@ -354,8 +403,10 @@
       <details><summary>モノを捨てたくないのですが、片づけはできますか？</summary><p>できます。無理に捨てることはおすすめしていません。使う頻度や置き場所の見直しから進めます。</p></details>
       <details><summary>前回と違う内容をお願いしてもいいですか？</summary><p>もちろんです。前日のリマインドへのご返信や、当日のお話の中で気軽にお伝えください。</p></details>
       <details><summary>親の家の片づけを、子どもの立場から相談できますか？</summary><p>はい。離れて暮らすご家族からのご相談もお受けしています。進め方や、親御さんへの話し方からご一緒に考えます。</p></details>
-      <details><summary>お願いできないことはありますか？</summary><p>高所作業や、専門業者が必要な作業など、安全にできないことはお受けできない場合があります。事前にご相談ください。</p></details>
-      <details><summary>支払い方法を教えてください。</summary><p>【現金／振込 など】に対応しています。</p></details>
+      <details><summary>お願いできないことはありますか？</summary><p>高所作業、エアコン内部の掃除、不用品の回収、ペットのお世話、重い家具の移動など、危険をともなう作業はお受けしていません。</p></details>
+      <details><summary>留守中にお願いできますか？</summary><p>内容によってはお受けできます。鍵のお預かりも含めて、まずはLINEでご相談ください。</p></details>
+      <details><summary>どんな人が来ますか？</summary><p>お伺いするのは、代表の藤田ひとりです。毎回同じ担当なので、説明し直す手間がありません。損害賠償保険にも加入しています。</p></details>
+      <details><summary>支払い方法を教えてください。</summary><p>当日の現金払い、または銀行振込に対応しています。</p></details>
     </div>
   </div>
 </section>
@@ -366,7 +417,7 @@
     <div class="sec-title" style="margin-bottom:24px"><span class="en">Area</span><h2>対応エリア</h2></div>
     <div class="area-box">
       <div class="main"><span>富士市・富士宮市</span>を中心に<br>三島市・沼津市・御殿場市</div>
-      <p>上記以外の地域も、ご相談ください。</p>
+      <p>富士市・富士宮市は交通費無料です。それ以外の地域は、実費と出張費をいただきます。お気軽にお問い合わせください。</p>
     </div>
   </div>
 </section>
@@ -400,7 +451,8 @@
   <img src="assets/logo_kurashinote_round_transparent.png" alt="くらしの手 家事代行・ハウスキーピング">
   <div class="info">
     富士・富士宮の家事代行と片づけ<br>
-    代表 MEI（整理収納アドバイザー1級・終活アドバイザー）<br>
+    代表 藤田 美枝子（整理収納アドバイザー1級・終活アドバイザー）<br>
+    受付 10:00〜20:00（不定休）／LINEは24時間以内にご返信します<br>
     対応エリア：富士市・富士宮市・三島市・沼津市・御殿場市
   </div>
   <div class="links">
