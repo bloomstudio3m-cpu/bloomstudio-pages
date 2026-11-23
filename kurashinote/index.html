@@ -136,6 +136,12 @@
   @media (max-width:480px){ .flow{ grid-template-columns:1fr; } }
 
   .photo{ overflow:hidden; }
+  .hero .photo.hero-illust{ aspect-ratio:auto; border-radius:0; background:none; display:flex; justify-content:center; }
+  .hero .photo.hero-illust img{ width:auto; max-width:100%; max-height:440px; height:auto; object-fit:contain; mix-blend-mode:multiply; }
+  @media (max-width:820px){ .hero .photo.hero-illust img{ max-height:280px; } }
+  .seminar{ margin-top:18px; }
+  .seminar img{ width:100%; border-radius:12px; aspect-ratio:16/8; object-fit:cover; }
+  .seminar figcaption{ font-size:12px; color:var(--sub); margin-top:6px; }
   .icon-panel{ background:var(--pink-xl); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--pink-d); font-size:13px; font-weight:500; }
   .icon-panel svg{ width:64px; height:64px; fill:none; stroke:var(--pink); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .photo img{ width:100%; height:100%; object-fit:cover; }
@@ -239,7 +245,7 @@
       </div>
       <p class="btn-note">「何を頼めばいいか決まっていない」ご相談も大丈夫です。</p>
     </div>
-    <div class="photo"><img src="assets/photos/closet_after.jpg" alt="整理収納で使いやすく整えたクローゼット"></div>
+    <div class="photo hero-illust"><img src="assets/photos/illust.jpg" alt="くらしの手 代表 藤田美枝子のイラスト"></div>
   </div>
 </div>
 
@@ -273,6 +279,7 @@
           <div>遺品整理士</div>
           <div>2級FP技能士</div>
         </div>
+        <figure class="seminar"><img src="assets/photos/seminar.jpg" alt="公民館での片づけ講座の様子"><figcaption>公民館での片づけ・終活講座の講師も務めています</figcaption></figure>
         <a href="https://politeliving2022.com/profile/" class="more">くわしいプロフィールを見る →</a>
       </div>
     </div>
